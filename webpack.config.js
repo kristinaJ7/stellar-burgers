@@ -54,7 +54,22 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './public/index.html'
     }),
-    new Dotenv()
+   //new Dotenv()
+    new Dotenv({
+       path: './.env.example',         
+      safe: false,
+      systemvars: true,      
+      defaults: false,
+      silent: false
+    })
+  
+
+
+
+
+
+
+
   ],
   resolve: {
     extensions: [
@@ -88,7 +103,12 @@ module.exports = {
   devServer: {
     static: path.join(__dirname, './dist'),
     compress: true,
+
     historyApiFallback: true,
+
     port: 4000
   }
 };
+ 
+
+

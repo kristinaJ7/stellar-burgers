@@ -3,6 +3,13 @@ import { TIngredient, TOrder, TOrdersData, TUser } from './types';
 
 const URL = process.env.BURGER_API_URL;
 
+// Лог для проверки загрузки URL
+console.log('[API] BURGER_API_URL:', URL);
+
+if (!URL) {
+  console.error('[API] Ошибка: BURGER_API_URL не определён в окружении!');
+}
+
 const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
 
@@ -70,7 +77,6 @@ type TFeedsResponse = TServerResponse<{
 type TOrdersResponse = TServerResponse<{
   data: TOrder[];
 }>;
-
 export const getIngredientsApi = () =>
   fetch(`${URL}/ingredients`)
     .then((res) => checkResponse<TIngredientsResponse>(res))
@@ -86,7 +92,7 @@ export const getFeedsApi = () =>
       if (data?.success) return data;
       return Promise.reject(data);
     });
-
+// история заказов
 export const getOrdersApi = () =>
   fetchWithRefresh<TFeedsResponse>(`${URL}/orders`, {
     method: 'GET',
@@ -102,6 +108,7 @@ export const getOrdersApi = () =>
 type TNewOrderResponse = TServerResponse<{
   order: TOrder;
   name: string;
+  // number: number;
 }>;
 
 export const orderBurgerApi = (data: string[]) =>
@@ -205,14 +212,14 @@ export const resetPasswordApi = (data: { password: string; token: string }) =>
     });
 
 type TUserResponse = TServerResponse<{ user: TUser }>;
-
+// загрузка профиля
 export const getUserApi = () =>
   fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
     headers: {
       authorization: getCookie('accessToken')
     } as HeadersInit
   });
-
+//сохранение изменений
 export const updateUserApi = (user: Partial<TRegisterData>) =>
   fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
     method: 'PATCH',
@@ -222,7 +229,7 @@ export const updateUserApi = (user: Partial<TRegisterData>) =>
     } as HeadersInit,
     body: JSON.stringify(user)
   });
-
+// выход
 export const logoutApi = () =>
   fetch(`${URL}/auth/logout`, {
     method: 'POST',

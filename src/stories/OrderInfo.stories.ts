@@ -1,4 +1,7 @@
 import { OrderInfoUI } from '@ui';
+
+//import { OrderInfoUI } from 'src/components/ui/order-info/order-info';
+
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta = {
@@ -42,7 +45,8 @@ export const DefaultOrderInfo: Story = {
       createdAt: '',
       updatedAt: '',
       number: 2,
-      ingredients: ['Булка', 'Начинка']
+      ingredients: ['Булка', 'Начинка'],
+      missingIngredients: []
     }
   }
 };

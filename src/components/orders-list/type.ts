@@ -1,5 +1,7 @@
 import { TOrder } from '@utils-types';
 
-export type OrdersListProps = {
-  orders: TOrder[];
-};
+export interface OrdersListUIProps {
+  orderByDate: TOrder[];
+
+  onOrderClick?: (orderNumber: number) => void;
+}
