@@ -1,9 +1,11 @@
 import React, { FC } from 'react';
+
 import {
   Button,
   ConstructorElement,
   CurrencyIcon
 } from '@zlden/react-developer-burger-ui-components';
+
 import styles from './burger-constructor.module.css';
 import { BurgerConstructorUIProps } from './type';
 import { TConstructorIngredient } from '@utils-types';
@@ -44,7 +46,8 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
               ingredient={item}
               index={index}
               totalItems={constructorItems.ingredients.length}
-              key={item.id}
+              // key={item.id}
+              key={item._id}
             />
           )
         )
