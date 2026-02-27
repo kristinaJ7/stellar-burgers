@@ -46,7 +46,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
               ingredient={item}
               index={index}
               totalItems={constructorItems.ingredients.length}
-              // key={item.id}
               key={item._id}
             />
           )
@@ -90,17 +89,18 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
       />
     </div>
 
-    {orderRequest && (
-      <Modal onClose={closeOrderModal} title={'Оформляем заказ...'}>
-        <Preloader />
+    {/* Модальное окно с прелоадером — показывается во время отправки заказа */}
+    {orderRequest && !orderModalData && (
+      <Modal onClose={closeOrderModal} title='Оформление заказа ...'>
+        <div className={styles.preloaderContainer}>
+          <Preloader />
+        </div>
       </Modal>
     )}
 
+    {/* Модальное окно с деталями заказа — показывается после успешной отправки */}
     {orderModalData && (
-      <Modal
-        onClose={closeOrderModal}
-        title={orderRequest ? 'Оформляем заказ...' : ''}
-      >
+      <Modal onClose={closeOrderModal} title='Заказ оформлен!'>
         <OrderDetailsUI orderNumber={orderModalData.number} />
       </Modal>
     )}

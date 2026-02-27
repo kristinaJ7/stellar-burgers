@@ -2,9 +2,13 @@ import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
 import { getUserApi, updateUserApi, refreshToken } from '@api';
 import { TUserResponse } from '@utils-types';
+import { useNavigate } from 'react-router-dom';
+
+import { useAppDispatch } from '../../services/store';
+import { logout } from '../../services/slices/auth-slice';
 
 // Константы
-const MAX_TOKEN_REFRESH_RETRIES = 2;
+const TOKEN_REFRESH_RETRIES = 2;
 
 export const Profile: FC = () => {
   const [formValue, setFormValue] = useState({
@@ -15,7 +19,10 @@ export const Profile: FC = () => {
   const [initialName, setInitialName] = useState('');
   const [initialEmail, setInitialEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined); // тип изменён на string | undefined
+
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch(); // используем типизированный dispatch
 
   useEffect(() => {
     loadUserData();
@@ -23,7 +30,7 @@ export const Profile: FC = () => {
 
   const loadUserData = async () => {
     setIsLoading(true);
-    setError(null);
+    setError(undefined);
 
     try {
       const userData = await getUserApi();
@@ -43,7 +50,6 @@ export const Profile: FC = () => {
 
       try {
         await refreshToken();
-        // После обновления токена — снова загружаем данные
         await loadUserData();
       } catch (refreshErr) {
         console.error('Не удалось обновить токен:', refreshErr);
@@ -72,11 +78,11 @@ export const Profile: FC = () => {
     }
 
     setIsLoading(true);
-    setError(null);
+    setError(undefined);
 
     let retryCount = 0;
 
-    while (retryCount < MAX_TOKEN_REFRESH_RETRIES) {
+    while (retryCount < TOKEN_REFRESH_RETRIES) {
       try {
         await updateUserApi({
           name: formValue.name,
@@ -84,7 +90,6 @@ export const Profile: FC = () => {
           password: formValue.password || undefined
         });
 
-        // Успех: обновляем начальные значения
         setInitialName(formValue.name);
         setInitialEmail(formValue.email);
         setFormValue((prev) => ({ ...prev, password: '' }));
@@ -120,13 +125,12 @@ export const Profile: FC = () => {
 
   const handleCancel = (e: SyntheticEvent) => {
     e.preventDefault();
-    // Возвращаем все поля к исходным значениям
     setFormValue({
       name: initialName,
       email: initialEmail,
       password: ''
     });
-    setError(null);
+    setError(undefined);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,16 +138,29 @@ export const Profile: FC = () => {
       ...prev,
       [e.target.name]: e.target.value
     }));
-    setError(null); // Сбрасываем ошибку при изменении формы
+    setError(undefined);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout()).unwrap();
+      navigate('/login', { replace: true });
+      alert('Вы вышли из аккаунта.');
+    } catch (err) {
+      console.error('Ошибка при выходе:', err);
+      setError('Не удалось выйти из аккаунта. Попробуйте позже.');
+    }
   };
 
   return (
     <ProfileUI
       formValue={formValue}
       isFormChanged={isFormChanged}
+      updateUserError={error} // теперь тип совместим
       handleCancel={handleCancel}
       handleSubmit={handleSubmit}
       handleInputChange={handleInputChange}
+      // handleLogout={handleLogout}
     />
   );
 };

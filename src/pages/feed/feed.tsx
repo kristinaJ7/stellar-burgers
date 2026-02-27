@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState, useCallback } from 'react';
 import { useAppSelector, useAppDispatch } from '../../services/store';
 import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
@@ -21,8 +21,17 @@ export const Feed: FC = () => {
   const loading = useAppSelector(selectFeedLoading);
   const error = useAppSelector(selectFeedError);
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     dispatch(fetchOrdersFeed());
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    dispatch(fetchOrdersFeed())
+      .unwrap()
+      .finally(() => setIsRefreshing(false));
   }, [dispatch]);
 
   if (loading) {
@@ -30,13 +39,43 @@ export const Feed: FC = () => {
   }
 
   if (error) {
-    return <div>Ошибка загрузки ленты: {error}</div>;
+    return (
+      <div className='feed-error'>
+        <p>Ошибка загрузки ленты: {error}</p>
+        <button onClick={handleRefresh} disabled={isRefreshing}>
+          {isRefreshing ? 'Обновление...' : 'Повторить'}
+        </button>
+      </div>
+    );
+  }
+
+  if (!orders?.length) {
+    return (
+      <div className='feed-empty'>
+        <div className='feed-stats'>
+          <p>
+            Всего заказов: <strong>{total}</strong>
+          </p>
+          <p>
+            За день: <strong>{totalToday}</strong>
+          </p>
+        </div>
+        <p>Пока нет заказов для отображения</p>
+      </div>
+    );
   }
 
   return (
-    <FeedUI
-      orders={orders}
-      handleGetFeeds={() => dispatch(fetchOrdersFeed())}
-    />
+    <div className='feed-container'>
+      <div className='feed-stats'>
+        <p>
+          Всего заказов: <strong>{total}</strong>
+        </p>
+        <p>
+          За день: <strong>{totalToday}</strong>
+        </p>
+      </div>
+      <FeedUI orders={orders} handleGetFeeds={handleRefresh} />
+    </div>
   );
 };
