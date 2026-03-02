@@ -1,73 +1,29 @@
-import { FC, useMemo, useEffect } from 'react';
+import React, { FC, useEffect } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
-import { TIngredient } from '@utils-types';
 import { useAppSelector, useAppDispatch } from '../../services/store';
 import {
-  selectCurrentOrder,
+  selectProcessedOrderInfo,
   selectOrderRequest,
   selectOrderError,
   fetchOrderByNumber
 } from '../../services/slices/order-slice';
-import { selectIngredients } from '../../services/slices/ingredients-slice';
 
-export const OrderInfo: FC<{ orderNumber?: number }> = ({ orderNumber }) => {
+export const OrderInfo: FC<{ orderNumber: number }> = ({ orderNumber }) => {
   const dispatch = useAppDispatch();
-  const orderData = useAppSelector(selectCurrentOrder);
-  const ingredients = useAppSelector(selectIngredients);
-  const orderLoading = useAppSelector(selectOrderRequest);
+  const orderInfo = useAppSelector(selectProcessedOrderInfo);
+  const loading = useAppSelector(selectOrderRequest);
   const error = useAppSelector(selectOrderError);
 
   useEffect(() => {
     if (
       typeof orderNumber === 'number' &&
       orderNumber > 0 &&
-      (!orderData || orderData.number !== orderNumber)
+      (!orderInfo || orderInfo.number !== orderNumber)
     ) {
       dispatch(fetchOrderByNumber(orderNumber));
     }
-  }, [dispatch, orderNumber, orderData]);
-
-  const orderInfo = useMemo(() => {
-    if (
-      !orderData ||
-      !Array.isArray(orderData.ingredients) ||
-      !ingredients?.length
-    ) {
-      return null;
-    }
-
-    const date = new Date(orderData.createdAt ?? Date.now());
-    const ingredientsInfo: { [key: string]: TIngredient & { count: number } } =
-      {};
-    const missingIngredients: string[] = [];
-
-    orderData.ingredients.forEach((item) => {
-      const ingredient = ingredients.find((ing) => ing._id === item);
-      if (ingredient) {
-        ingredientsInfo[item] = ingredientsInfo[item]
-          ? { ...ingredient, count: ingredientsInfo[item].count + 1 }
-          : { ...ingredient, count: 1 };
-      } else {
-        missingIngredients.push(item);
-      }
-    });
-
-    const total = Object.values(ingredientsInfo).reduce(
-      (acc, item) => acc + item.price * item.count,
-      0
-    );
-
-    return {
-      ...orderData,
-      name: orderData.name ?? 'Без названия',
-      status: orderData.status ?? 'unknown',
-      ingredientsInfo,
-      date,
-      total,
-      missingIngredients
-    };
-  }, [orderData, ingredients]);
+  }, [dispatch, orderNumber, orderInfo]);
 
   if (typeof orderNumber !== 'number' || orderNumber <= 0) {
     return (
@@ -77,7 +33,7 @@ export const OrderInfo: FC<{ orderNumber?: number }> = ({ orderNumber }) => {
     );
   }
 
-  if (orderLoading || !ingredients?.length) {
+  if (loading) {
     return <Preloader />;
   }
 

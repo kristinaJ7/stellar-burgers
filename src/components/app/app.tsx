@@ -14,12 +14,10 @@ import { NotFound404 } from '@pages';
 import { Modal } from '@components';
 import { OrderInfo } from '@components';
 import { IngredientDetails } from '@components';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
-import { useNavigate } from 'react-router-dom';
 import { AppHeader } from '@components';
-import { useLocation } from 'react-router-dom';
 import {
   BrowserRouter as Router,
   Routes,
@@ -27,83 +25,110 @@ import {
   Navigate
 } from 'react-router-dom';
 
-import { useAppDispatch } from '../../services/store';
+import { useAppDispatch, useAppSelector } from '../../services/store';
+import {
+  selectIsAuthenticated,
+  selectAuthChecked
+} from '../../services/slices/auth-slice';
 
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { TOrder } from '../../utils/types';
+// Убираем импорт fetchOrder, оставляем только fetchOrderByNumber
+import { fetchOrderByNumber } from '../../services/slices/order-slice';
+// Добавляем импорт селекторов
+import {
+  selectCurrentOrder,
+  selectOrderError
+} from '../../services/slices/order-slice';
 
-// Типизация состояния авторизации
-interface AuthState {
-  isAuthenticated: boolean;
-  authChecked: boolean; // Флаг готовности проверки
-}
-
-interface RootState {
-  auth: AuthState;
-}
-
-// Компоненты маршрутов с корректной типизацией
+// Компонент защищённого маршрута (без изменений)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated
-  );
-  const authChecked = useSelector((state: RootState) => state.auth.authChecked);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authChecked = useAppSelector(selectAuthChecked);
+  const location = useLocation();
 
-  // Пока проверка не завершена — показываем загрузчик
   if (!authChecked) {
     return <div>Проверка авторизации...</div>;
   }
 
-  // Если авторизован — отдаём контент, иначе — редирект
-  return isAuthenticated ? children : <Navigate to='/login' replace />;
+  if (!isAuthenticated) {
+    return <Navigate to='/login' state={{ from: location }} replace />;
+  }
+
+  return children;
 };
 
+// Компонент публичного маршрута (без изменений)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated
-  );
-  const authChecked = useSelector((state: RootState) => state.auth.authChecked);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authChecked = useAppSelector(selectAuthChecked);
 
   if (!authChecked) {
     return <div>Проверка авторизации...</div>;
   }
 
-  return !isAuthenticated ? children : <Navigate to='/profile' replace />;
-};
+  if (isAuthenticated) {
+    return <Navigate to='/' replace />;
+  }
 
-// Обёртка для OrderInfo
+  return children;
+};
 const OrderInfoWrapper = () => {
   const { number } = useParams<{ number: string }>();
   const orderNumber = number ? parseInt(number, 10) : undefined;
+  const dispatch = useAppDispatch();
+  const currentOrder = useAppSelector(selectCurrentOrder);
+  const error = useAppSelector(selectOrderError);
+  const [loading, setLoading] = useState(true);
 
-  if (!orderNumber) {
-    return <div>Неверный номер заказа</div>;
+  useEffect(() => {
+    if (!orderNumber || isNaN(orderNumber)) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    dispatch(fetchOrderByNumber(orderNumber));
+  }, [orderNumber, dispatch]);
+
+  if (loading && !currentOrder) {
+    return <div>Загрузка деталей заказа...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!currentOrder) {
+    return <div>Заказ не найден</div>;
+  }
+
+  // Проверяем, что orderNumber определён и корректен
+  if (orderNumber === undefined || isNaN(orderNumber)) {
+    return <div>Некорректный номер заказа в URL</div>;
   }
 
   return <OrderInfo orderNumber={orderNumber} />;
 };
 
-const ModalWrapper = ({
-  children,
-  title
-}: {
-  children: React.ReactNode;
-  title: string;
-}) => {
+// Универсальный ModalWrapper — устраняет дублирование
+const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const background = location.state?.background;
+  const modalData = location.state as
+    | { title?: string; background?: Location }
+    | undefined;
 
   const handleClose = () => {
-    if (background) {
+    if (modalData?.background) {
       navigate(-1);
     } else {
-      navigate('/');
+      navigate('..', { replace: true });
     }
   };
 
   return (
-    <Modal title={title} onClose={handleClose}>
+    <Modal title={modalData?.title || 'Детали'} onClose={handleClose}>
       {children}
     </Modal>
   );
@@ -127,11 +152,9 @@ const App = () => {
       <div className={styles.app}>
         <AppHeader />
         <Routes>
-          {/* Публичные роуты — без защиты */}
           <Route path='/' element={<ConstructorPage />} />
           <Route path='/feed' element={<Feed />} />
 
-          {/* Публичные формы авторизации */}
           <Route
             path='/login'
             element={
@@ -165,7 +188,6 @@ const App = () => {
             }
           />
 
-          {/* Защищённые роуты — обернуты в ProtectedRoute */}
           <Route
             path='/profile'
             element={
@@ -186,28 +208,18 @@ const App = () => {
             path='/profile/orders/:number'
             element={
               <ProtectedRoute>
-                <ModalWrapper title='Детали заказа'>
-                  <OrderInfoWrapper />
-                </ModalWrapper>
+                <OrderInfoWrapper />
               </ProtectedRoute>
             }
           />
 
-          {/* Остальные роуты */}
-          <Route
-            path='/feed/:number'
-            element={
-              <ModalWrapper title='Детали заказа'>
-                <OrderInfoWrapper />
-              </ModalWrapper>
-            }
-          />
+          <Route path='/feed/:number' element={<OrderInfoWrapper />} />
           <Route
             path='/ingredients/:id'
             element={
-              <ModalWrapper title='Ингредиенты'>
+              <UniversalModalWrapper>
                 <IngredientDetails />
-              </ModalWrapper>
+              </UniversalModalWrapper>
             }
           />
 

@@ -202,9 +202,10 @@ export const selectUser = (state: RootState): TUser | null => state.auth.user;
 export const selectAuthError = (state: RootState): string | null =>
   state.auth.error;
 
-export const selectUserName = (state: RootState): string => {
-  if (!state.auth.authChecked) return 'Загрузка...';
-  if (state.auth.error) return `Ошибка: ${state.auth.error}`;
-  if (state.auth.user?.name) return state.auth.user.name.trim();
-  return 'Личный кабинет';
+export const selectUserName = (state: RootState): string | undefined => {
+  // Если есть ошибка авторизации или пользователь не авторизован — возвращаем undefined
+  if (state.auth.error || !state.auth.isAuthenticated) {
+    return undefined;
+  }
+  return state.auth.user?.name?.trim();
 };

@@ -1,10 +1,13 @@
 import { useAppSelector } from '../../services/store';
-import { selectFeedOrders } from '../../services/slices/feed-slice';
-import { FC } from 'react';
+import {
+  selectFeedOrders,
+  selectFeedTotal,
+  selectFeedTotalToday
+} from '../../services/slices/feed-slice';
+import { FC, useMemo } from 'react';
 import { TOrder } from '@utils-types';
 import { FeedInfoUI } from '../ui/feed-info';
 
-// Определяем getOrders внутри компонента
 const getOrders = (orders: TOrder[], status: string): number[] =>
   orders
     .filter((item) => item.status === status)
@@ -13,16 +16,20 @@ const getOrders = (orders: TOrder[], status: string): number[] =>
 
 export const FeedInfo: FC = () => {
   const orders = useAppSelector(selectFeedOrders);
-  const feed = useAppSelector((state) => state.feed);
+  const total = useAppSelector(selectFeedTotal);
+  const totalToday = useAppSelector(selectFeedTotalToday);
 
-  const readyOrders = getOrders(orders, 'done');
-  const pendingOrders = getOrders(orders, 'pending');
+  const readyOrders = useMemo(() => getOrders(orders, 'done'), [orders]);
+  const pendingOrders = useMemo(() => getOrders(orders, 'pending'), [orders]);
 
   return (
     <FeedInfoUI
+      feed={{
+        total,
+        totalToday
+      }}
       readyOrders={readyOrders}
       pendingOrders={pendingOrders}
-      feed={feed}
     />
   );
 };

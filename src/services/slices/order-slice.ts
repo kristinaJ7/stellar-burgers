@@ -1,7 +1,8 @@
 import {
   createSlice,
   createAsyncThunk,
-  ActionReducerMapBuilder
+  ActionReducerMapBuilder,
+  createSelector
 } from '@reduxjs/toolkit';
 import {
   orderBurgerApi,
@@ -9,8 +10,14 @@ import {
   getFeedsApi,
   getOrdersApi
 } from '../../utils/burger-api';
-import { TOrder, TOrdersData, TNewOrderResponse } from '../../utils/types';
+import {
+  TOrder,
+  TOrdersData,
+  TNewOrderResponse,
+  TIngredient
+} from '../../utils/types';
 import { RootState } from '../root-reducer';
+import { selectIngredients } from './ingredients-slice';
 
 // Нормализация ответа заказа
 const normalizeOrderResponse = (response: TNewOrderResponse): TOrder => ({
@@ -205,3 +212,51 @@ export const selectOrderError = (state: RootState): string | null =>
   state.order.error;
 export const selectOrderNumber = (state: RootState): number | null =>
   state.order.orderNumber;
+
+// Новый селектор для обработанных данных заказа
+export interface TProcessedOrderInfo extends TOrder {
+  ingredientsInfo: { [key: string]: TIngredient & { count: number } };
+  date: Date;
+  total: number;
+  missingIngredients: string[];
+}
+
+export const selectProcessedOrderInfo = createSelector(
+  [selectCurrentOrder, selectIngredients],
+  (order, ingredients): TProcessedOrderInfo | null => {
+    if (!order || !Array.isArray(order.ingredients)) {
+      return null;
+    }
+
+    const date = new Date(order.createdAt ?? Date.now());
+    const ingredientsInfo: { [key: string]: TIngredient & { count: number } } =
+      {};
+    const missingIngredients: string[] = [];
+
+    order.ingredients.forEach((ingredientId) => {
+      const ingredient = ingredients.find((ing) => ing._id === ingredientId);
+      if (ingredient) {
+        ingredientsInfo[ingredientId] = ingredientsInfo[ingredientId]
+          ? { ...ingredient, count: ingredientsInfo[ingredientId].count + 1 }
+          : { ...ingredient, count: 1 };
+      } else {
+        missingIngredients.push(ingredientId);
+      }
+    });
+
+    const total = Object.values(ingredientsInfo).reduce(
+      (acc, item) => acc + item.price * item.count,
+      0
+    );
+
+    return {
+      ...order,
+      name: order.name ?? 'Без названия',
+      status: order.status ?? 'unknown',
+      ingredientsInfo,
+      date,
+      total,
+      missingIngredients
+    };
+  }
+);

@@ -1,12 +1,13 @@
 import { createSlice, PayloadAction, createAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { RootState } from '../root-reducer';
-import { TIngredient } from '../../utils/types';
+import { TIngredient, TConstructorIngredient } from '../../utils/types';
+import { v4 as uuidv4 } from 'uuid'; // Импорт uuid
 
 // Состояние конструктора
 interface ConstructorState {
   bun: TIngredient | null;
-  ingredients: TIngredient[];
+  ingredients: TConstructorIngredient[]; // Обновлённый тип
 }
 
 const initialState: ConstructorState = {
@@ -27,10 +28,10 @@ export const constructorSlice = createSlice({
   name: 'burgerConstructor',
   initialState,
   reducers: {
-    // Удаление ингредиента (упрощено)
+    // Удаление ингредиента по уникальному id
     removeIngredient: (state, action: PayloadAction<string>) => {
       const id = action.payload;
-      const index = state.ingredients.findIndex((item) => item._id === id);
+      const index = state.ingredients.findIndex((item) => item.id === id);
       if (index !== -1) state.ingredients.splice(index, 1);
     },
 
@@ -40,7 +41,7 @@ export const constructorSlice = createSlice({
       state.ingredients = [];
     },
 
-    // Перемещение ингредиента (оптимизировано)
+    // Перемещение ингредиента без мутаций
     moveIngredient: (state, action: PayloadAction<MoveIngredientPayload>) => {
       const { from, to } = action.payload;
 
@@ -54,33 +55,36 @@ export const constructorSlice = createSlice({
         return;
       }
 
-      // Перемещаем элемент
-      const moved = state.ingredients[from];
-      state.ingredients.splice(from, 1);
-      state.ingredients.splice(to, 0, moved);
+      // Безопасное перемещение через копию массива
+      const newIngredients = [...state.ingredients];
+      const moved = newIngredients.splice(from, 1)[0];
+      newIngredients.splice(to, 0, moved);
+      state.ingredients = newIngredients;
     }
   },
-  // Обработка единого экшена addItem
+  // Обработка единого экшена addItem с генерацией id
   extraReducers: (builder) => {
     builder.addCase(addItem, (state, action) => {
       const item = action.payload;
 
       if (item.type === 'bun') {
-        // Если булка — заменяем текущую
         state.bun = item;
       } else {
-        // Иначе — добавляем в массив ингредиентов
-        state.ingredients.push(item);
+        const constructorIngredient: TConstructorIngredient = {
+          ...item,
+          id: uuidv4()
+        };
+        state.ingredients.push(constructorIngredient);
       }
     });
   }
 });
 
-// Экспорт экшенов (убрали addIngredient и setBun — их заменяет addItem)
+// Экспорт экшенов
 export const { removeIngredient, clearConstructor, moveIngredient } =
   constructorSlice.actions;
 
-// Селекторы (остаются без изменений)
+// Селекторы
 export const selectConstructorBun = (state: RootState) =>
   state.burgerConstructor?.bun || null;
 

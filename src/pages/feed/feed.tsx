@@ -49,32 +49,9 @@ export const Feed: FC = () => {
     );
   }
 
-  if (!orders?.length) {
-    return (
-      <div className='feed-empty'>
-        <div className='feed-stats'>
-          <p>
-            Всего заказов: <strong>{total}</strong>
-          </p>
-          <p>
-            За день: <strong>{totalToday}</strong>
-          </p>
-        </div>
-        <p>Пока нет заказов для отображения</p>
-      </div>
-    );
-  }
-
   return (
     <div className='feed-container'>
-      <div className='feed-stats'>
-        <p>
-          Всего заказов: <strong>{total}</strong>
-        </p>
-        <p>
-          За день: <strong>{totalToday}</strong>
-        </p>
-      </div>
+      <div className='feed-stats' />
       <FeedUI orders={orders} handleGetFeeds={handleRefresh} />
     </div>
   );
