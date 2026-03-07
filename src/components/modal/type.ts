@@ -1,7 +1,6 @@
-import { ReactNode } from 'react';
-
-export type TModalProps = {
+export interface TModalProps {
+  isOpen?: boolean;
   title: string;
   onClose: () => void;
-  children?: ReactNode;
-};
+  children?: React.ReactNode;
+}

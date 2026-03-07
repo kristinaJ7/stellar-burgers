@@ -12,12 +12,12 @@ import { ProfileOrders } from '@pages';
 import { NotFound404 } from '@pages';
 
 import { Modal } from '@components';
-import { OrderInfo } from '@components';
 import { IngredientDetails } from '@components';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
 import { AppHeader } from '@components';
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -31,15 +31,7 @@ import {
   selectAuthChecked
 } from '../../services/slices/auth-slice';
 
-import { useEffect, useState } from 'react';
-import { TOrder } from '../../utils/types';
-// Убираем импорт fetchOrder, оставляем только fetchOrderByNumber
-import { fetchOrderByNumber } from '../../services/slices/order-slice';
-// Добавляем импорт селекторов
-import {
-  selectCurrentOrder,
-  selectOrderError
-} from '../../services/slices/order-slice';
+import { useEffect } from 'react';
 
 // Компонент защищённого маршрута (без изменений)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -73,45 +65,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
   return children;
 };
-const OrderInfoWrapper = () => {
-  const { number } = useParams<{ number: string }>();
-  const orderNumber = number ? parseInt(number, 10) : undefined;
-  const dispatch = useAppDispatch();
-  const currentOrder = useAppSelector(selectCurrentOrder);
-  const error = useAppSelector(selectOrderError);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!orderNumber || isNaN(orderNumber)) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    dispatch(fetchOrderByNumber(orderNumber));
-  }, [orderNumber, dispatch]);
-
-  if (loading && !currentOrder) {
-    return <div>Загрузка деталей заказа...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  if (!currentOrder) {
-    return <div>Заказ не найден</div>;
-  }
-
-  // Проверяем, что orderNumber определён и корректен
-  if (orderNumber === undefined || isNaN(orderNumber)) {
-    return <div>Некорректный номер заказа в URL</div>;
-  }
-
-  return <OrderInfo orderNumber={orderNumber} />;
-};
-
-// Универсальный ModalWrapper — устраняет дублирование
 const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -128,7 +82,11 @@ const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <Modal title={modalData?.title || 'Детали'} onClose={handleClose}>
+    <Modal
+      title={modalData?.title || 'Детали ингредиента'}
+      isOpen={!!modalData?.background}
+      onClose={handleClose}
+    >
       {children}
     </Modal>
   );
@@ -204,23 +162,21 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path='/profile/orders/:number'
-            element={
-              <ProtectedRoute>
-                <OrderInfoWrapper />
-              </ProtectedRoute>
-            }
-          />
 
-          <Route path='/feed/:number' element={<OrderInfoWrapper />} />
+          {/* Маршрут для модального окна (открывается поверх текущего маршрута) */}
           <Route
             path='/ingredients/:id'
             element={
               <UniversalModalWrapper>
-                <IngredientDetails />
+                <IngredientDetails isModal />
               </UniversalModalWrapper>
             }
+          />
+
+          {/* Отдельный маршрут для прямой ссылки (полная страница) */}
+          <Route
+            path='/ingredient/:id'
+            element={<IngredientDetails isModal={false} />}
           />
 
           <Route path='*' element={<NotFound404 />} />

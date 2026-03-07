@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useParams } from 'react-router-dom'; // Для получения ID из URL
+import { useParams, useLocation } from 'react-router-dom'; // Для получения ID из URL и проверки контекста
 
 import { useAppSelector } from '../../services/store';
 import {
@@ -10,9 +10,17 @@ import {
 import { Preloader } from '../ui/preloader';
 import { IngredientDetailsUI } from '../ui/ingredient-details';
 
-export const IngredientDetails: FC = () => {
+// Определяем интерфейс пропсов с опциональным isModal
+interface IngredientDetailsProps {
+  isModal?: boolean;
+}
+
+export const IngredientDetails: FC<IngredientDetailsProps> = ({
+  isModal = false
+}) => {
   // 1. Получаем ID ингредиента из URL (например, /ingredients/123)
   const { id } = useParams();
+  const location = useLocation();
 
   // 2. Достаём данные из Redux-стора
   const ingredients = useAppSelector(selectIngredients); // Список всех ингредиентов
@@ -39,6 +47,19 @@ export const IngredientDetails: FC = () => {
     return <div>Ингредиент не найден</div>; // Если ингредиент с таким ID не найден
   }
 
-  // 5. Если всё ок — отдаём данные в UI-компонент
-  return <IngredientDetailsUI ingredientData={ingredientData} />;
+  // 5. Определяем режим отображения
+  if (isModal) {
+    // В режиме модального окна просто отдаём данные в UI‑компонент
+    return <IngredientDetailsUI ingredientData={ingredientData} />;
+  }
+
+  // В режиме полной страницы добавляем шапку и заголовок
+  return (
+    <div className='ingredient-full-page'>
+      <h1 className='ingredient-title'>
+        Детали ингредиента: {ingredientData.name}
+      </h1>
+      <IngredientDetailsUI ingredientData={ingredientData} />
+    </div>
+  );
 };

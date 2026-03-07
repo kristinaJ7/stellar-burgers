@@ -126,7 +126,9 @@ const orderSlice = createSlice({
     resetOrderModal: (state) => {
       state.orderModalData = null;
       state.orderNumber = null;
-    }
+    },
+    // Добавляем resetOrderState для полного сброса состояния
+    resetOrderState: (state) => ({ ...initialState })
   },
   extraReducers: (builder: ActionReducerMapBuilder<OrderState>) => {
     builder
@@ -154,7 +156,8 @@ const orderSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchOrderByNumber.fulfilled, (state, action) => {
-        state.currentOrder = action.payload;
+        // Сохраняем данные в orderModalData для модального окна
+        state.orderModalData = action.payload;
         state.orderNumber = action.payload.number;
       })
       .addCase(fetchOrderByNumber.rejected, (state, action) => {
@@ -194,7 +197,8 @@ export const {
   clearUserOrders,
   clearError,
   clearOrder,
-  resetOrderModal
+  resetOrderModal,
+  resetOrderState // добавляем в экспорт
 } = orderSlice.actions;
 
 // Селекторы
@@ -213,7 +217,7 @@ export const selectOrderError = (state: RootState): string | null =>
 export const selectOrderNumber = (state: RootState): number | null =>
   state.order.orderNumber;
 
-// Новый селектор для обработанных данных заказа
+// Новый селектор для обработанных данных заказа в модальном окне
 export interface TProcessedOrderInfo extends TOrder {
   ingredientsInfo: { [key: string]: TIngredient & { count: number } };
   date: Date;
@@ -221,6 +225,47 @@ export interface TProcessedOrderInfo extends TOrder {
   missingIngredients: string[];
 }
 
+export const selectModalOrderInfo = createSelector(
+  [selectOrderModalData, selectIngredients],
+  (order, ingredients): TProcessedOrderInfo | null => {
+    if (!order || !Array.isArray(order.ingredients)) {
+      return null;
+    }
+
+    const date = new Date(order.createdAt ?? Date.now());
+    const ingredientsInfo: { [key: string]: TIngredient & { count: number } } =
+      {};
+    const missingIngredients: string[] = [];
+
+    order.ingredients.forEach((ingredientId) => {
+      const ingredient = ingredients.find((ing) => ing._id === ingredientId);
+      if (ingredient) {
+        ingredientsInfo[ingredientId] = ingredientsInfo[ingredientId]
+          ? { ...ingredient, count: ingredientsInfo[ingredientId].count + 1 }
+          : { ...ingredient, count: 1 };
+      } else {
+        missingIngredients.push(ingredientId);
+      }
+    });
+
+    const total = Object.values(ingredientsInfo).reduce(
+      (acc, item) => acc + item.price * item.count,
+      0
+    );
+
+    return {
+      ...order,
+      name: order.name ?? 'Без названия',
+      status: order.status ?? 'unknown',
+      ingredientsInfo,
+      date,
+      total,
+      missingIngredients
+    };
+  }
+);
+
+// Селектор для обработанных данных текущего заказа (если нужен отдельно)
 export const selectProcessedOrderInfo = createSelector(
   [selectCurrentOrder, selectIngredients],
   (order, ingredients): TProcessedOrderInfo | null => {

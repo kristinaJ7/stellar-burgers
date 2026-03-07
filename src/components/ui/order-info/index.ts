@@ -1,3 +1,3 @@
 export { OrderInfoUI } from './order-info';
 
-export { OrderInfo } from './order-info';
+export { OrderInfoUI as OrderInfo } from './order-info';

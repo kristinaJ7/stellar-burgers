@@ -1,9 +1,10 @@
-import React, { FC, useEffect } from 'react';
-import { Preloader } from '../ui/preloader';
-import { OrderInfoUI } from '../ui/order-info';
+import { FC, useEffect, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '../../services/store';
+import { Preloader } from '@ui';
+
+import { OrderInfoUI } from '@ui';
 import {
-  selectProcessedOrderInfo,
+  selectModalOrderInfo,
   selectOrderRequest,
   selectOrderError,
   fetchOrderByNumber
@@ -11,44 +12,55 @@ import {
 
 export const OrderInfo: FC<{ orderNumber: number }> = ({ orderNumber }) => {
   const dispatch = useAppDispatch();
-  const orderInfo = useAppSelector(selectProcessedOrderInfo);
+  const orderInfo = useAppSelector(selectModalOrderInfo);
   const loading = useAppSelector(selectOrderRequest);
   const error = useAppSelector(selectOrderError);
 
   useEffect(() => {
-    if (
-      typeof orderNumber === 'number' &&
-      orderNumber > 0 &&
-      (!orderInfo || orderInfo.number !== orderNumber)
-    ) {
+    if (typeof orderNumber === 'number' && orderNumber > 0) {
+      console.log('OrderInfo: fetching order by number:', orderNumber);
       dispatch(fetchOrderByNumber(orderNumber));
     }
-  }, [dispatch, orderNumber, orderInfo]);
+  }, [dispatch, orderNumber]);
 
-  if (typeof orderNumber !== 'number' || orderNumber <= 0) {
-    return (
-      <div className='error-message'>
-        Некорректный номер заказа: {orderNumber}. Проверьте передачу пропса.
-      </div>
-    );
-  }
+  // Отладочный вывод
+  console.log('OrderInfo state:', {
+    orderNumber,
+    loading,
+    error,
+    hasOrderInfo: !!orderInfo
+  });
 
   if (loading) {
     return <Preloader />;
   }
 
-  if (error) {
+  if (!orderInfo) {
     return (
       <div className='error-message'>
-        Ошибка загрузки: {error}. Попробуйте обновить страницу.
+        <h4>Заказ №{orderNumber}</h4>
+        <p>Данные заказа не загружены.</p>
+        <button
+          onClick={() => dispatch(fetchOrderByNumber(orderNumber))}
+          className='retry-button'
+        >
+          Повторить загрузку
+        </button>
       </div>
     );
   }
 
-  if (!orderInfo) {
+  if (error) {
     return (
       <div className='error-message'>
-        Не удалось загрузить данные заказа. Попробуйте позже.
+        <h4>Заказ №{orderNumber}</h4>
+        <p>Ошибка загрузки: {error}</p>
+        <button
+          onClick={() => dispatch(fetchOrderByNumber(orderNumber))}
+          className='retry-button'
+        >
+          Повторить загрузку
+        </button>
       </div>
     );
   }

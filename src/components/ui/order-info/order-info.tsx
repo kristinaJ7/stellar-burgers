@@ -8,13 +8,20 @@ import { TProcessedOrderInfo } from 'src/services/slices/order-slice';
 import styles from './order-info.module.css';
 import { OrderStatus } from '@components';
 
-// Если нужно экспортировать OrderInfoUI под именем OrderInfo
-export { OrderInfoUI as OrderInfo } from './order-info';
-
 export const OrderInfoUI: FC<{ orderInfo: TProcessedOrderInfo }> = memo(
   ({ orderInfo }) => {
-    const { ingredientsInfo, date, total, name, status, missingIngredients } =
-      orderInfo;
+    const {
+      ingredientsInfo,
+      date,
+      total,
+      name,
+      status,
+      missingIngredients,
+      _id: orderId
+    } = orderInfo;
+
+    // Безопасное получение orderId: если нет — используем временную метку
+    const safeOrderId = orderId || `temp-${Date.now()}`;
 
     return (
       <div className={styles.wrap}>
@@ -26,8 +33,11 @@ export const OrderInfoUI: FC<{ orderInfo: TProcessedOrderInfo }> = memo(
         <OrderStatus status={status} />
         <p className='text text_type_main-medium pt-15 pb-6'>Состав:</p>
         <ul className={`${styles.list} mb-8`}>
-          {Object.entries(ingredientsInfo).map(([id, ingredient]) => (
-            <li className={`pb-4 pr-6 ${styles.item}`} key={id}>
+          {Object.entries(ingredientsInfo).map(([id, ingredient], index) => (
+            <li
+              className={`pb-4 pr-6 ${styles.item}`}
+              key={`${id}-${safeOrderId}-${index}`} // уникальный ключ
+            >
               <div className={styles.img_wrap}>
                 <div className={styles.border}>
                   <img
@@ -56,8 +66,11 @@ export const OrderInfoUI: FC<{ orderInfo: TProcessedOrderInfo }> = memo(
               <strong>Не найдены ингредиенты:</strong>
             </p>
             <ul className={styles.list}>
-              {missingIngredients.map((id) => (
-                <li key={id} className={styles['missing-ingredient']}>
+              {missingIngredients.map((id, index) => (
+                <li
+                  key={`${id}-${safeOrderId}-${index}`}
+                  className={styles['missing-ingredient']}
+                >
                   {id}
                 </li>
               ))}

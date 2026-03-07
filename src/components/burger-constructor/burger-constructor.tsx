@@ -22,14 +22,7 @@ interface ApiError {
   message?: string;
 }
 
-interface TIngredient {
-  _id: string;
-  name: string;
-  price: number;
-  image: string;
-  type: string;
-  [key: string]: any;
-}
+import { TIngredient } from '@utils-types';
 
 export const BurgerConstructor: FC = () => {
   const dispatch = useAppDispatch();
@@ -47,11 +40,14 @@ export const BurgerConstructor: FC = () => {
 
   const [errorText, setErrorText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+
+  // Флаг для отображения модального окна
+  const showOrderModal = !!orderModalData && !orderRequest;
+
   const isButtonDisabled = orderRequest || !authChecked || !!errorText;
 
   // Отслеживаем загрузку данных булочки
   useEffect(() => {
-    // Булочка может быть null (не выбрана) или иметь значение
     if (bun !== undefined) {
       setIsLoading(false);
     }
@@ -223,8 +219,10 @@ export const BurgerConstructor: FC = () => {
     orderModalData,
     errorText,
     isButtonDisabled,
-    isLoading
+    isLoading,
+    showOrderModal
   });
+
   return (
     <BurgerConstructorUI
       price={price}
@@ -233,6 +231,7 @@ export const BurgerConstructor: FC = () => {
       orderModalData={orderModalData}
       onOrderClick={handleOrderClick}
       closeOrderModal={closeOrderModal}
+      showOrderModal={showOrderModal}
     />
   );
 };
