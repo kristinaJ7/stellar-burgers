@@ -16,6 +16,7 @@ import {
   selectIsAuthenticated,
   selectAuthChecked
 } from '../../services/slices/auth-slice';
+import { removeIngredient } from '../../services/slices/constructor-slice';
 
 interface ApiError {
   status?: number;
@@ -30,7 +31,7 @@ export const BurgerConstructor: FC = () => {
   const location = useLocation();
 
   const bun: TIngredient | null = useAppSelector(selectConstructorBun);
-  const ingredients: TIngredient[] = useAppSelector(
+  const ingredients: TIngredient[] | null | undefined = useAppSelector(
     selectConstructorIngredients
   );
   const orderRequest = useAppSelector(selectOrderRequest);
@@ -41,10 +42,20 @@ export const BurgerConstructor: FC = () => {
   const [errorText, setErrorText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
 
+  // Безопасное получение ингредиентов (оставляем для расчёта цены)
+  const validIngredients = useMemo(() => {
+    if (!ingredients || !Array.isArray(ingredients)) return [];
+    return ingredients.filter((item) => item && item._id);
+  }, [ingredients]);
+
   // Флаг для отображения модального окна
   const showOrderModal = !!orderModalData && !orderRequest;
 
-  const isButtonDisabled = orderRequest || !authChecked || !!errorText;
+  // Убираем проверку hasRequiredIngredients — теперь можно без начинок
+  const isButtonDisabled = useMemo(
+    () => orderRequest || !authChecked || !!errorText || !bun || !bun._id,
+    [orderRequest, authChecked, errorText, bun]
+  );
 
   // Отслеживаем загрузку данных булочки
   useEffect(() => {
@@ -58,8 +69,6 @@ export const BurgerConstructor: FC = () => {
     console.log('BurgerConstructor: isAuthenticated =', isAuthenticated);
     if (authChecked) setErrorText('');
   }, [isAuthenticated, authChecked]);
-
-  const validIngredients = ingredients || [];
 
   const price = useMemo(() => {
     if (!bun) return 0;
@@ -83,6 +92,7 @@ export const BurgerConstructor: FC = () => {
       return [];
     }
 
+    // Теперь допустимо, если validIngredients пуст — будет только bun._id дважды
     const ids = [
       bun._id,
       ...validIngredients.map((ing) => ing._id).filter(Boolean),
@@ -114,24 +124,6 @@ export const BurgerConstructor: FC = () => {
         state: { from: location.pathname },
         replace: true
       });
-      console.groupEnd();
-      return;
-    }
-
-    if (!bun || !bun._id) {
-      setErrorText('Для оформления заказа необходима булочка');
-      alert('Сначала выберите булочку для бургера');
-      console.warn(
-        'Отсутствует булочка или её _id — прерывание отправки заказа'
-      );
-      console.groupEnd();
-      return;
-    }
-
-    if (validIngredients.length === 0) {
-      setErrorText('Добавьте хотя бы один ингредиент');
-      alert('Добавьте хотя бы один ингредиент в бургер');
-      console.warn('Отсутствуют ингредиенты — прерывание отправки заказа');
       console.groupEnd();
       return;
     }
@@ -193,7 +185,6 @@ export const BurgerConstructor: FC = () => {
     authChecked,
     isAuthenticated,
     bun,
-    validIngredients,
     orderRequest,
     ingredientIds,
     dispatch,
@@ -206,6 +197,18 @@ export const BurgerConstructor: FC = () => {
     setErrorText('');
     console.log('BurgerConstructor: модальное окно заказа закрыто');
   }, [dispatch]);
+
+  // ДОБАВЛЕННЫЙ ОБРАБОТЧИК УДАЛЕНИЯ ИНГРЕДИЕНТА
+  const handleRemoveIngredient = useCallback(
+    (ingredientId: string) => {
+      console.log(
+        'BurgerConstructor: удаление ингредиента с _id:',
+        ingredientId
+      );
+      dispatch(removeIngredient(ingredientId));
+    },
+    [dispatch]
+  );
 
   const constructorItems = {
     bun: bun || null,
@@ -232,6 +235,7 @@ export const BurgerConstructor: FC = () => {
       onOrderClick={handleOrderClick}
       closeOrderModal={closeOrderModal}
       showOrderModal={showOrderModal}
+      onRemoveIngredient={handleRemoveIngredient} // Теперь переменная существует
     />
   );
 };

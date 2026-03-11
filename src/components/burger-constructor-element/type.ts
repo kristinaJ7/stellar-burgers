@@ -12,4 +12,6 @@ export interface BurgerConstructorElementProps {
   ingredient: TIngredient;
   index: number;
   totalItems: number;
+
+  onRemoveIngredient: (id: string) => void;
 }

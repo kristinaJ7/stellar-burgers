@@ -13,17 +13,13 @@ import { NotFound404 } from '@pages';
 
 import { Modal } from '@components';
 import { IngredientDetails } from '@components';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { OrderInfo } from '@components';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
 import { AppHeader } from '@components';
 
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate
-} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { useAppDispatch, useAppSelector } from '../../services/store';
 import {
@@ -33,7 +29,7 @@ import {
 
 import { useEffect } from 'react';
 
-// Компонент защищённого маршрута (без изменений)
+// Компонент защищённого маршрута
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const authChecked = useAppSelector(selectAuthChecked);
@@ -50,7 +46,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
-// Компонент публичного маршрута (без изменений)
+// Компонент публичного маршрута
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const authChecked = useAppSelector(selectAuthChecked);
@@ -83,7 +79,7 @@ const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Modal
-      title={modalData?.title || 'Детали ингредиента'}
+      title={modalData?.title || 'Детали'}
       isOpen={!!modalData?.background}
       onClose={handleClose}
     >
@@ -94,6 +90,10 @@ const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+
+  // Получаем background из состояния
+  const background = location.state?.background as Location | undefined;
 
   useEffect(() => {
     dispatch(fetchIngredients());
@@ -101,69 +101,84 @@ const App = () => {
   }, [dispatch]);
 
   return (
-    <Router
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true
-      }}
-    >
-      <div className={styles.app}>
-        <AppHeader />
+    <div className={styles.app}>
+      <AppHeader />
+
+      {/* Основной Routes — отображает страницу подложки */}
+      <Routes location={background || location}>
+        <Route path='/' element={<ConstructorPage />} />
+        <Route path='/feed' element={<Feed />} />
+
+        <Route
+          path='/login'
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/register'
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/forgot-password'
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/reset-password'
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path='/profile'
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/profile/orders'
+          element={
+            <ProtectedRoute>
+              <ProfileOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Маршруты для прямой ссылки (полная страница) */}
+        <Route
+          path='/ingredients/:id'
+          element={<IngredientDetails isModal={false} />}
+        />
+        <Route
+          path='/feed/:number'
+          element={<OrderInfo orderNumber={parseInt(useParams().number!)} />}
+        />
+        <Route
+          path='/profile/orders/:number'
+          element={<OrderInfo orderNumber={parseInt(useParams().number!)} />}
+        />
+
+        <Route path='*' element={<NotFound404 />} />
+      </Routes>
+
+      {/* Второй Routes — для модальных окон */}
+      {background && (
         <Routes>
-          <Route path='/' element={<ConstructorPage />} />
-          <Route path='/feed' element={<Feed />} />
-
-          <Route
-            path='/login'
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path='/register'
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path='/forgot-password'
-            element={
-              <PublicRoute>
-                <ForgotPassword />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path='/reset-password'
-            element={
-              <PublicRoute>
-                <ResetPassword />
-              </PublicRoute>
-            }
-          />
-
-          <Route
-            path='/profile'
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path='/profile/orders'
-            element={
-              <ProtectedRoute>
-                <ProfileOrders />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Маршрут для модального окна (открывается поверх текущего маршрута) */}
           <Route
             path='/ingredients/:id'
             element={
@@ -172,17 +187,25 @@ const App = () => {
               </UniversalModalWrapper>
             }
           />
-
-          {/* Отдельный маршрут для прямой ссылки (полная страница) */}
           <Route
-            path='/ingredient/:id'
-            element={<IngredientDetails isModal={false} />}
+            path='/feed/:number'
+            element={
+              <UniversalModalWrapper>
+                <OrderInfo orderNumber={parseInt(useParams().number!)} />
+              </UniversalModalWrapper>
+            }
           />
-
-          <Route path='*' element={<NotFound404 />} />
+          <Route
+            path='/profile/orders/:number'
+            element={
+              <UniversalModalWrapper>
+                <OrderInfo orderNumber={parseInt(useParams().number!)} />
+              </UniversalModalWrapper>
+            }
+          />
         </Routes>
-      </div>
-    </Router>
+      )}
+    </div>
   );
 };
 

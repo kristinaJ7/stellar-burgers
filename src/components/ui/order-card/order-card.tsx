@@ -10,7 +10,6 @@ import { OrderStatus } from '@components';
 
 export const OrderCardUI: FC<OrderCardUIProps> = memo(
   ({ orderInfo, maxIngredients, locationState, onClick }) => {
-    // Отладочная печать для проверки данных
     console.log(
       'Ингредиенты для рендера:',
       orderInfo.ingredientsToShow.map((i) => i._id)

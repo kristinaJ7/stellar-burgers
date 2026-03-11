@@ -1,13 +1,12 @@
-import { createSlice, PayloadAction, createAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { RootState } from '../root-reducer';
 import { TIngredient, TConstructorIngredient } from '../../utils/types';
-import { v4 as uuidv4 } from 'uuid'; // Импорт uuid
 
 // Состояние конструктора
 interface ConstructorState {
   bun: TIngredient | null;
-  ingredients: TConstructorIngredient[]; // Обновлённый тип
+  ingredients: TConstructorIngredient[];
 }
 
 const initialState: ConstructorState = {
@@ -15,24 +14,40 @@ const initialState: ConstructorState = {
   ingredients: []
 };
 
-// Экшен для перемещения ингредиента
-interface MoveIngredientPayload {
-  from: number;
-  to: number;
-}
-
-// Единый экшен для добавления любого ингредиента
-export const addItem = createAction<TIngredient>('constructor/addItem');
-
 export const constructorSlice = createSlice({
   name: 'burgerConstructor',
   initialState,
   reducers: {
-    // Удаление ингредиента по уникальному id
+    // Добавление ингредиента с унификацией ID
+    addItem: (state, action: PayloadAction<TConstructorIngredient>) => {
+      const item = action.payload;
+      if (item.type === 'bun') {
+        state.bun = item;
+      } else {
+        const normalizedItem = {
+          ...item,
+          id: item.id || item._id,
+          _id: item._id || item.id
+        };
+        state.ingredients.push(normalizedItem);
+      }
+    },
+
+    // Удаление ингредиента по _id
     removeIngredient: (state, action: PayloadAction<string>) => {
-      const id = action.payload;
-      const index = state.ingredients.findIndex((item) => item.id === id);
-      if (index !== -1) state.ingredients.splice(index, 1);
+      const ingredientId = action.payload;
+
+      console.log(
+        'constructorSlice: удаление ингредиента с _id:',
+        ingredientId
+      );
+      console.log('constructorSlice: до удаления:', state.ingredients);
+
+      state.ingredients = state.ingredients.filter(
+        (item) => item._id !== ingredientId
+      );
+
+      console.log('constructorSlice: после удаления:', state.ingredients);
     },
 
     // Очистка конструктора
@@ -41,8 +56,11 @@ export const constructorSlice = createSlice({
       state.ingredients = [];
     },
 
-    // Перемещение ингредиента без мутаций
-    moveIngredient: (state, action: PayloadAction<MoveIngredientPayload>) => {
+    // Перемещение ингредиента
+    moveIngredient: (
+      state,
+      action: PayloadAction<{ from: number; to: number }>
+    ) => {
       const { from, to } = action.payload;
 
       // Валидация индексов
@@ -61,27 +79,11 @@ export const constructorSlice = createSlice({
       newIngredients.splice(to, 0, moved);
       state.ingredients = newIngredients;
     }
-  },
-  // Обработка единого экшена addItem с генерацией id
-  extraReducers: (builder) => {
-    builder.addCase(addItem, (state, action) => {
-      const item = action.payload;
-
-      if (item.type === 'bun') {
-        state.bun = item;
-      } else {
-        const constructorIngredient: TConstructorIngredient = {
-          ...item,
-          id: uuidv4()
-        };
-        state.ingredients.push(constructorIngredient);
-      }
-    });
   }
 });
 
 // Экспорт экшенов
-export const { removeIngredient, clearConstructor, moveIngredient } =
+export const { addItem, removeIngredient, clearConstructor, moveIngredient } =
   constructorSlice.actions;
 
 // Селекторы

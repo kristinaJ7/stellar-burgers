@@ -1,17 +1,12 @@
 import { FC, memo, useCallback } from 'react';
 import { useAppDispatch } from '../../services/store';
-
-import {
-  moveIngredient,
-  removeIngredient
-} from '../../services/slices/constructor-slice';
-
+import { moveIngredient } from '../../services/slices/constructor-slice';
 import { BurgerConstructorElementUI } from '@ui';
 import { BurgerConstructorElementProps } from './type';
 
 export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
-  ({ ingredient, index, totalItems }) => {
-    const dispatch = useAppDispatch();
+  ({ ingredient, index, totalItems, onRemoveIngredient }) => {
+    const dispatch = useAppDispatch(); // Добавляем объявление dispatch
 
     if (!ingredient) return null;
 
@@ -28,8 +23,8 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
     }, [dispatch, index]);
 
     const handleClose = useCallback(() => {
-      dispatch(removeIngredient(ingredient._id));
-    }, [dispatch, ingredient._id]);
+      onRemoveIngredient(ingredient._id);
+    }, [onRemoveIngredient, ingredient._id]);
 
     return (
       <BurgerConstructorElementUI

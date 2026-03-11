@@ -6,7 +6,7 @@ import {
 } from '@zlden/react-developer-burger-ui-components';
 import styles from './burger-constructor.module.css';
 import { BurgerConstructorUIProps } from './type';
-import { TIngredient } from '@utils-types';
+import { TIngredient, TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorElement, Modal } from '@components';
 import { Preloader, OrderDetailsUI } from '@ui';
 
@@ -17,7 +17,8 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   orderModalData,
   onOrderClick,
   closeOrderModal,
-  showOrderModal // ← добавлен пропс
+  showOrderModal,
+  onRemoveIngredient
 }) => {
   console.log('DEBUG: BurgerConstructorUI получил пропсы:', {
     orderRequest,
@@ -29,7 +30,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
 
   return (
     <section className={styles.burger_constructor}>
-      {/* Булочка сверху */}
       {constructorItems.bun ? (
         <div className={`${styles.element} mb-4 mr-4`}>
           <ConstructorElement
@@ -48,19 +48,24 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </div>
       )}
 
-      {/* Список ингредиентов */}
       <ul className={styles.elements}>
         {constructorItems.ingredients.length > 0 ? (
           constructorItems.ingredients
-            .filter((item): item is TIngredient => !!item._id)
-            .map((item: TIngredient, index: number) => (
-              <BurgerConstructorElement
-                ingredient={item}
-                index={index}
-                totalItems={constructorItems.ingredients.length}
-                key={item._id}
-              />
-            ))
+            .filter((item): item is TConstructorIngredient => !!item.id) // Фильтруем по id
+            .map(
+              (
+                item: TConstructorIngredient,
+                index: number // Используем TConstructorIngredient
+              ) => (
+                <BurgerConstructorElement
+                  ingredient={item}
+                  index={index}
+                  totalItems={constructorItems.ingredients.length}
+                  key={item.id} // ← Используем уникальный id вместо _id
+                  onRemoveIngredient={onRemoveIngredient}
+                />
+              )
+            )
         ) : (
           <div
             className={`${styles.noBuns} ml-8 mb-4 mr-5 text text_type_main-default`}
@@ -70,7 +75,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         )}
       </ul>
 
-      {/* Булочка снизу */}
       {constructorItems.bun ? (
         <div className={`${styles.element} mt-4 mr-4`}>
           <ConstructorElement
@@ -89,7 +93,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </div>
       )}
 
-      {/* Итого и кнопка */}
       <div className={`${styles.total} mt-10 mr-4`}>
         <div className={`${styles.cost} mr-10`}>
           <p className={`text ${styles.text} mr-2`}>{price}</p>
@@ -105,12 +108,11 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         />
       </div>
 
-      {/* Прелоадер во время отправки */}
       {orderRequest && (
         <Modal
           onClose={closeOrderModal}
           title='Оформление заказа ...'
-          isOpen={orderRequest} // ← добавлен isOpen
+          isOpen={orderRequest}
         >
           <div className={styles.preloaderContainer}>
             <Preloader />
@@ -118,12 +120,11 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </Modal>
       )}
 
-      {/* Модальное окно с деталями заказа */}
       {showOrderModal && orderModalData?.number !== undefined && (
         <Modal
           onClose={closeOrderModal}
           title='Заказ оформлен!'
-          isOpen={showOrderModal} // ← добавлен isOpen
+          isOpen={showOrderModal}
         >
           <OrderDetailsUI orderNumber={orderModalData.number} />
         </Modal>

@@ -42,7 +42,13 @@ export const BurgerIngredientsUI: FC<BurgerIngredientsUIProps> = memo(
             </Tab>
           </ul>
         </nav>
-        <div className={styles.content}>
+        <div
+          className={styles.content}
+          style={{
+            height: 'calc(100vh - 120px)', // 100 % высоты экрана минус высота навигации
+            overflowY: 'auto' // Вертикальная прокрутка при необходимости
+          }}
+        >
           <IngredientsCategory
             title='Булки'
             titleRef={titleBunRef}

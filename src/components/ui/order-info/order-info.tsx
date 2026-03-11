@@ -20,7 +20,6 @@ export const OrderInfoUI: FC<{ orderInfo: TProcessedOrderInfo }> = memo(
       _id: orderId
     } = orderInfo;
 
-    // Безопасное получение orderId: если нет — используем временную метку
     const safeOrderId = orderId || `temp-${Date.now()}`;
 
     return (
