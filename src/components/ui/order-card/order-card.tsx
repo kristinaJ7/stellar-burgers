@@ -9,7 +9,7 @@ import { OrderCardUIProps } from './type';
 import { OrderStatus } from '@components';
 
 export const OrderCardUI: FC<OrderCardUIProps> = memo(
-  ({ orderInfo, maxIngredients, locationState, onClick }) => {
+  ({ orderInfo, maxIngredients, onClick }) => {
     console.log(
       'Ингредиенты для рендера:',
       orderInfo.ingredientsToShow.map((i) => i._id)

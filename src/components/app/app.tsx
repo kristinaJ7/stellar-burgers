@@ -88,6 +88,19 @@ const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Вспомогательные компоненты‑обёртки для корректного использования useParams
+const OrderInfoWrapper = () => {
+  const { number } = useParams();
+  if (!number) return <Navigate to='/feed' replace />;
+  return <OrderInfo orderNumber={parseInt(number)} />;
+};
+
+const ProfileOrderInfoWrapper = () => {
+  const { number } = useParams();
+  if (!number) return <Navigate to='/profile/orders' replace />;
+  return <OrderInfo orderNumber={parseInt(number)} />;
+};
+
 const App = () => {
   const dispatch = useAppDispatch();
   const location = useLocation();
@@ -104,7 +117,6 @@ const App = () => {
     <div className={styles.app}>
       <AppHeader />
 
-      {/* Основной Routes — отображает страницу подложки */}
       <Routes location={background || location}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
@@ -159,24 +171,19 @@ const App = () => {
           }
         />
 
-        {/* Маршруты для прямой ссылки (полная страница) */}
         <Route
           path='/ingredients/:id'
           element={<IngredientDetails isModal={false} />}
         />
-        <Route
-          path='/feed/:number'
-          element={<OrderInfo orderNumber={parseInt(useParams().number!)} />}
-        />
+        <Route path='/feed/:number' element={<OrderInfoWrapper />} />
         <Route
           path='/profile/orders/:number'
-          element={<OrderInfo orderNumber={parseInt(useParams().number!)} />}
+          element={<ProfileOrderInfoWrapper />}
         />
 
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {/* Второй Routes — для модальных окон */}
       {background && (
         <Routes>
           <Route
@@ -191,7 +198,7 @@ const App = () => {
             path='/feed/:number'
             element={
               <UniversalModalWrapper>
-                <OrderInfo orderNumber={parseInt(useParams().number!)} />
+                <OrderInfoWrapper />
               </UniversalModalWrapper>
             }
           />
@@ -199,7 +206,7 @@ const App = () => {
             path='/profile/orders/:number'
             element={
               <UniversalModalWrapper>
-                <OrderInfo orderNumber={parseInt(useParams().number!)} />
+                <ProfileOrderInfoWrapper />
               </UniversalModalWrapper>
             }
           />

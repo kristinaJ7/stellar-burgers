@@ -31,7 +31,7 @@ export const FeedUI: FC<FeedUIProps> = memo(
             )}
           </div>
           <div className={styles.columnInfo}>
-            <FeedInfo /> {/* Пропсы убраны */}
+            <FeedInfo />
           </div>
         </div>
       </main>

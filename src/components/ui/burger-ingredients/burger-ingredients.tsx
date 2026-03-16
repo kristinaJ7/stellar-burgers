@@ -42,30 +42,27 @@ export const BurgerIngredientsUI: FC<BurgerIngredientsUIProps> = memo(
             </Tab>
           </ul>
         </nav>
-        <div
-          className={styles.content}
-          style={{
-            height: 'calc(100vh - 120px)', // 100 % высоты экрана минус высота навигации
-            overflowY: 'auto' // Вертикальная прокрутка при необходимости
-          }}
-        >
+        <div className={styles.content}>
           <IngredientsCategory
             title='Булки'
             titleRef={titleBunRef}
             ingredients={buns}
             ref={bunsRef}
+            data-cy='bun_ingredients'
           />
           <IngredientsCategory
             title='Начинки'
             titleRef={titleMainRef}
             ingredients={mains}
             ref={mainsRef}
+            data-cy='main_ingredients'
           />
           <IngredientsCategory
             title='Соусы'
             titleRef={titleSaucesRef}
             ingredients={sauces}
             ref={saucesRef}
+            data-cy='souce_ingredients'
           />
         </div>
       </section>

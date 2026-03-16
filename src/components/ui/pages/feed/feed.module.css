@@ -1,10 +1,12 @@
+
 .containerMain {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   max-width: 1240px;
   margin-left: auto;
   margin-right: auto;
+  height: 90vh; 
+  min-height: 600px; 
 }
 
 .titleBox {
@@ -18,17 +20,23 @@
 .main {
   display: flex;
   justify-content: space-between;
-  height: 100%;
   width: 1240px;
+  flex: 1; 
   overflow: hidden;
 }
 
 .columnOrders {
   width: 608px;
+  flex: 1;
+  min-height: 500px;
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+  padding-right: 16px; 
+
 }
 
 .columnInfo {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: visible;
   width: 580px;
+  max-height: none;
 }

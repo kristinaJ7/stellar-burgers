@@ -1,5 +1,5 @@
 import { FC, memo, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { OrderCardProps } from './type';
 import { TIngredient } from '@utils-types';
@@ -44,17 +44,18 @@ export const OrderCard: FC<OrderCardProps & { onClick?: () => void }> = memo(
         total,
         date
       };
-    }, [order, order.ingredients, ingredients]); // добавлена зависимость
+    }, [order, order.ingredients, ingredients]);
 
     if (!orderInfo) return null;
 
     return (
-      <OrderCardUI
-        orderInfo={orderInfo}
-        maxIngredients={maxIngredients}
-        locationState={{ background: location }}
-        onClick={onClick}
-      />
+      <Link
+        to={`/feed/${order.number}`}
+        state={{ background: location, title: `Заказ №${order.number}` }}
+        style={{ textDecoration: 'none', color: 'inherit' }}
+      >
+        <OrderCardUI orderInfo={orderInfo} maxIngredients={maxIngredients} />
+      </Link>
     );
   }
 );

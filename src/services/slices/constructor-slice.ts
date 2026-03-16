@@ -33,7 +33,7 @@ export const constructorSlice = createSlice({
       }
     },
 
-    // Удаление ингредиента по _id
+    // Удаление ингредиента по _id (удаляет только один элемент)
     removeIngredient: (state, action: PayloadAction<string>) => {
       const ingredientId = action.payload;
 
@@ -43,9 +43,15 @@ export const constructorSlice = createSlice({
       );
       console.log('constructorSlice: до удаления:', state.ingredients);
 
-      state.ingredients = state.ingredients.filter(
-        (item) => item._id !== ingredientId
+      // Находим индекс первого ингредиента с нужным _id
+      const indexToRemove = state.ingredients.findIndex(
+        (item) => item._id === ingredientId
       );
+
+      // Если ингредиент найден, удаляем его (только один)
+      if (indexToRemove !== -1) {
+        state.ingredients.splice(indexToRemove, 1);
+      }
 
       console.log('constructorSlice: после удаления:', state.ingredients);
     },
