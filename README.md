@@ -1,4 +1,5 @@
-# Проектная работа 11-го спринта
+# Проектная работа 11-го спринта  "Stellar-burgers"
+<img width="1485" height="902" alt="2026-03-17_11-33-03" src="https://github.com/user-attachments/assets/dc191264-dacb-4848-a824-2fafa40200a2" />
 
 [Макет](<https://www.figma.com/file/vIywAvqfkOIRWGOkfOnReY/React-Fullstack_-Проектные-задачи-(3-месяца)_external_link?type=design&node-id=0-1&mode=design>)
 
