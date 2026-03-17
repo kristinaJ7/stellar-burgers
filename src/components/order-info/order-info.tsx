@@ -1,98 +1,66 @@
-import { FC, useMemo, useEffect } from 'react';
-import { Preloader } from '../ui/preloader';
-import { OrderInfoUI } from '../ui/order-info';
-import { TIngredient } from '@utils-types';
+import { FC, useEffect, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '../../services/store';
+import { Preloader } from '@ui';
+
+import { OrderInfoUI } from '@ui';
 import {
-  selectCurrentOrder,
+  selectModalOrderInfo,
   selectOrderRequest,
   selectOrderError,
   fetchOrderByNumber
 } from '../../services/slices/order-slice';
-import { selectIngredients } from '../../services/slices/ingredients-slice';
 
-export const OrderInfo: FC<{ orderNumber?: number }> = ({ orderNumber }) => {
+export const OrderInfo: FC<{ orderNumber: number }> = ({ orderNumber }) => {
   const dispatch = useAppDispatch();
-  const orderData = useAppSelector(selectCurrentOrder);
-  const ingredients = useAppSelector(selectIngredients);
-  const orderLoading = useAppSelector(selectOrderRequest);
+  const orderInfo = useAppSelector(selectModalOrderInfo);
+  const loading = useAppSelector(selectOrderRequest);
   const error = useAppSelector(selectOrderError);
 
   useEffect(() => {
-    if (
-      typeof orderNumber === 'number' &&
-      orderNumber > 0 &&
-      (!orderData || orderData.number !== orderNumber)
-    ) {
+    if (typeof orderNumber === 'number' && orderNumber > 0) {
+      console.log('OrderInfo: fetching order by number:', orderNumber);
       dispatch(fetchOrderByNumber(orderNumber));
     }
-  }, [dispatch, orderNumber, orderData]);
+  }, [dispatch, orderNumber]);
 
-  const orderInfo = useMemo(() => {
-    if (
-      !orderData ||
-      !Array.isArray(orderData.ingredients) ||
-      !ingredients?.length
-    ) {
-      return null;
-    }
+  // Отладочный вывод
+  console.log('OrderInfo state:', {
+    orderNumber,
+    loading,
+    error,
+    hasOrderInfo: !!orderInfo
+  });
 
-    const date = new Date(orderData.createdAt ?? Date.now());
-    const ingredientsInfo: { [key: string]: TIngredient & { count: number } } =
-      {};
-    const missingIngredients: string[] = [];
-
-    orderData.ingredients.forEach((item) => {
-      const ingredient = ingredients.find((ing) => ing._id === item);
-      if (ingredient) {
-        ingredientsInfo[item] = ingredientsInfo[item]
-          ? { ...ingredient, count: ingredientsInfo[item].count + 1 }
-          : { ...ingredient, count: 1 };
-      } else {
-        missingIngredients.push(item);
-      }
-    });
-
-    const total = Object.values(ingredientsInfo).reduce(
-      (acc, item) => acc + item.price * item.count,
-      0
-    );
-
-    return {
-      ...orderData,
-      name: orderData.name ?? 'Без названия',
-      status: orderData.status ?? 'unknown',
-      ingredientsInfo,
-      date,
-      total,
-      missingIngredients
-    };
-  }, [orderData, ingredients]);
-
-  if (typeof orderNumber !== 'number' || orderNumber <= 0) {
-    return (
-      <div className='error-message'>
-        Некорректный номер заказа: {orderNumber}. Проверьте передачу пропса.
-      </div>
-    );
-  }
-
-  if (orderLoading || !ingredients?.length) {
+  if (loading) {
     return <Preloader />;
-  }
-
-  if (error) {
-    return (
-      <div className='error-message'>
-        Ошибка загрузки: {error}. Попробуйте обновить страницу.
-      </div>
-    );
   }
 
   if (!orderInfo) {
     return (
       <div className='error-message'>
-        Не удалось загрузить данные заказа. Попробуйте позже.
+        <h4>Заказ №{orderNumber}</h4>
+        <p>Данные заказа не загружены.</p>
+        <button
+          onClick={() => dispatch(fetchOrderByNumber(orderNumber))}
+          className='retry-button'
+        >
+          Повторить загрузку
+        </button>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className='error-message'>
+        <h4>Заказ №{orderNumber}</h4>
+        <p>Ошибка загрузки: {error}</p>
+        <button
+          onClick={() => dispatch(fetchOrderByNumber(orderNumber))}
+          className='retry-button'
+        >
+          Повторить загрузку
+        </button>
       </div>
     );
   }

@@ -19,10 +19,17 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
         <Link
           className={styles.article}
           to={`/ingredients/${_id}`}
-          state={locationState}
+          state={{
+            ...locationState,
+            title: name // добавляем title для модального окна
+          }}
         >
           {count && <Counter count={count} />}
-          <img className={styles.img} src={image} alt='картинка ингредиента.' />
+          <img
+            className={styles.img}
+            src={image}
+            alt={`Изображение ингредиента ${name}`}
+          />
           <div className={`${styles.cost} mt-2 mb-2`}>
             <p className='text text_type_digits-default mr-2'>{price}</p>
             <CurrencyIcon type='primary' />
@@ -31,7 +38,10 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
         </Link>
         <AddButton
           text='Добавить'
-          onClick={handleAdd}
+          onClick={(e) => {
+            e.stopPropagation(); // предотвращаем всплытие события к Link
+            handleAdd();
+          }}
           extraClass={`${styles.addButton} mt-8`}
         />
       </li>

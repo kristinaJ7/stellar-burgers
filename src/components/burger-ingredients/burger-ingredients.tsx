@@ -7,6 +7,9 @@ import {
   selectIngredients,
   selectIsLoading
 } from '../../services/slices/ingredients-slice';
+import { Modal } from '@components';
+
+import { IngredientDetailsUI } from '@ui';
 
 export const BurgerIngredients: FC = () => {
   const ingredients = useAppSelector(selectIngredients);
@@ -23,6 +26,9 @@ export const BurgerIngredients: FC = () => {
     : [];
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
+  const [selectedIngredient, setSelectedIngredient] =
+    useState<TIngredient | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);
@@ -78,23 +84,51 @@ export const BurgerIngredients: FC = () => {
     [setCurrentTab, titleBunRef, titleMainRef, titleSaucesRef]
   );
 
+  const handleIngredientClick = useCallback((ingredient: TIngredient) => {
+    setSelectedIngredient(ingredient);
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedIngredient(null);
+  }, []);
+
   if (isLoading) return <div>Загрузка ингредиентов...</div>;
   if (!ingredients || ingredients.length === 0)
     return <div>Нет ингредиентов</div>;
 
   return (
-    <BurgerIngredientsUI
-      currentTab={currentTab}
-      buns={buns}
-      mains={mains}
-      sauces={sauces}
-      titleBunRef={titleBunRef}
-      titleMainRef={titleMainRef}
-      titleSaucesRef={titleSaucesRef}
-      bunsRef={bunsRef}
-      mainsRef={mainsRef}
-      saucesRef={saucesRef}
-      onTabClick={onTabClick}
-    />
+    <div>
+      <BurgerIngredientsUI
+        currentTab={currentTab}
+        buns={buns}
+        mains={mains}
+        sauces={sauces}
+        titleBunRef={titleBunRef}
+        titleMainRef={titleMainRef}
+        titleSaucesRef={titleSaucesRef}
+        bunsRef={bunsRef}
+        mainsRef={mainsRef}
+        saucesRef={saucesRef}
+        onTabClick={onTabClick}
+        selectedIngredient={selectedIngredient}
+        isModalOpen={isModalOpen}
+        onIngredientClick={handleIngredientClick}
+        closeModal={closeModal}
+      />
+
+      {/* Рендер модального окна внутри return */}
+      {isModalOpen && selectedIngredient && (
+        <Modal
+          isOpen={isModalOpen}
+          title={selectedIngredient.name}
+          onClose={closeModal}
+        >
+          {/* Изменён компонент и имя пропса: IngredientDetails → IngredientDetailsUI, ingredient → ingredientData */}
+          <IngredientDetailsUI ingredientData={selectedIngredient} />
+        </Modal>
+      )}
+    </div>
   );
 };

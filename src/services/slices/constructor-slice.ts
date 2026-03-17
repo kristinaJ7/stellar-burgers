@@ -1,12 +1,12 @@
-import { createSlice, PayloadAction, createAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { RootState } from '../root-reducer';
-import { TIngredient } from '../../utils/types';
+import { TIngredient, TConstructorIngredient } from '../../utils/types';
 
 // Состояние конструктора
 interface ConstructorState {
   bun: TIngredient | null;
-  ingredients: TIngredient[];
+  ingredients: TConstructorIngredient[];
 }
 
 const initialState: ConstructorState = {
@@ -14,34 +14,70 @@ const initialState: ConstructorState = {
   ingredients: []
 };
 
-// Экшен для перемещения ингредиента
-interface MoveIngredientPayload {
-  from: number;
-  to: number;
-}
-
-// Единый экшен для добавления любого ингредиента
-export const addItem = createAction<TIngredient>('constructor/addItem');
-
 export const constructorSlice = createSlice({
   name: 'burgerConstructor',
   initialState,
   reducers: {
-    // Удаление ингредиента (упрощено)
-    removeIngredient: (state, action: PayloadAction<string>) => {
-      const id = action.payload;
-      const index = state.ingredients.findIndex((item) => item._id === id);
-      if (index !== -1) state.ingredients.splice(index, 1);
+    // Добавление ингредиента с унификацией ID
+    addItem: (state, action: PayloadAction<TConstructorIngredient>) => {
+      const item = action.payload;
+      if (item.type === 'bun') {
+        state.bun = item;
+      } else {
+        const normalizedItem = {
+          ...item,
+          id: item.id || item._id,
+          _id: item._id || item.id
+        };
+        console.log(
+          'Добавляем ингредиент с id:',
+          normalizedItem.id,
+          'и _id:',
+          normalizedItem._id
+        );
+        state.ingredients.push(normalizedItem);
+      }
     },
 
+    // Удаление ингредиента по уникальному ID
+    removeIngredient: (state, action: PayloadAction<string>) => {
+      const ingredientId = action.payload;
+      const targetId = String(ingredientId);
+
+      console.log('=== УДАЛЕНИЕ ИНГРЕДИЕНТА ===');
+      console.log('ID для удаления (должен быть уникальным id):', targetId);
+      console.log('Ингредиенты до удаления:', state.ingredients);
+
+      const indexToRemove = state.ingredients.findIndex(
+        (item) => String(item.id) === targetId
+      );
+
+      console.log('Найденный индекс:', indexToRemove);
+
+      if (indexToRemove !== -1) {
+        const removedItem = state.ingredients[indexToRemove];
+        console.log('Удаляем ингредиент:', removedItem);
+        state.ingredients.splice(indexToRemove, 1);
+        console.log('Новый массив ингредиентов:', state.ingredients);
+      } else {
+        console.warn(`Ингредиент с id="${targetId}" не найден!`);
+        console.warn(
+          'Доступные ID:',
+          state.ingredients.map((item) => item.id)
+        );
+      }
+    },
     // Очистка конструктора
     clearConstructor: (state) => {
       state.bun = null;
       state.ingredients = [];
     },
 
-    // Перемещение ингредиента (оптимизировано)
-    moveIngredient: (state, action: PayloadAction<MoveIngredientPayload>) => {
+    // Перемещение ингредиента
+    moveIngredient: (
+      state,
+      action: PayloadAction<{ from: number; to: number }>
+    ) => {
       const { from, to } = action.payload;
 
       // Валидация индексов
@@ -54,33 +90,20 @@ export const constructorSlice = createSlice({
         return;
       }
 
-      // Перемещаем элемент
-      const moved = state.ingredients[from];
-      state.ingredients.splice(from, 1);
-      state.ingredients.splice(to, 0, moved);
+      // Безопасное перемещение через копию массива
+      const newIngredients = [...state.ingredients];
+      const moved = newIngredients.splice(from, 1)[0];
+      newIngredients.splice(to, 0, moved);
+      state.ingredients = newIngredients;
     }
-  },
-  // Обработка единого экшена addItem
-  extraReducers: (builder) => {
-    builder.addCase(addItem, (state, action) => {
-      const item = action.payload;
-
-      if (item.type === 'bun') {
-        // Если булка — заменяем текущую
-        state.bun = item;
-      } else {
-        // Иначе — добавляем в массив ингредиентов
-        state.ingredients.push(item);
-      }
-    });
   }
 });
 
-// Экспорт экшенов (убрали addIngredient и setBun — их заменяет addItem)
-export const { removeIngredient, clearConstructor, moveIngredient } =
+// Экспорт экшенов
+export const { addItem, removeIngredient, clearConstructor, moveIngredient } =
   constructorSlice.actions;
 
-// Селекторы (остаются без изменений)
+// Селекторы
 export const selectConstructorBun = (state: RootState) =>
   state.burgerConstructor?.bun || null;
 

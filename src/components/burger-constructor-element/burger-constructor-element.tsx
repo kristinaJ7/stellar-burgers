@@ -1,16 +1,11 @@
 import { FC, memo, useCallback } from 'react';
 import { useAppDispatch } from '../../services/store';
-
-import {
-  moveIngredient,
-  removeIngredient
-} from '../../services/slices/constructor-slice';
-
+import { moveIngredient } from '../../services/slices/constructor-slice';
 import { BurgerConstructorElementUI } from '@ui';
 import { BurgerConstructorElementProps } from './type';
 
 export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
-  ({ ingredient, index, totalItems }) => {
+  ({ ingredient, index, totalItems, onRemoveIngredient }) => {
     const dispatch = useAppDispatch();
 
     if (!ingredient) return null;
@@ -27,9 +22,14 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
       }
     }, [dispatch, index]);
 
+    // Исправлено: проверка существования id перед вызовом
     const handleClose = useCallback(() => {
-      dispatch(removeIngredient(ingredient._id));
-    }, [dispatch, ingredient._id]);
+      if (ingredient.id) {
+        onRemoveIngredient(ingredient.id);
+      } else {
+        console.warn('Попытка удалить ингредиент без id:', ingredient);
+      }
+    }, [onRemoveIngredient, ingredient.id]);
 
     return (
       <BurgerConstructorElementUI

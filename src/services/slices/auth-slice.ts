@@ -18,12 +18,14 @@ type AuthState = {
   user: TUser | null;
   isAuthenticated: boolean;
   error: string | null;
+  authChecked: boolean; // Флаг готовности проверки авторизации
 };
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
-  error: null
+  error: null,
+  authChecked: false // Начинаем с false — проверка не завершена
 };
 
 // Асинхронные действия
@@ -65,7 +67,9 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
       dispatch(clearUser());
       localStorage.removeItem('refreshToken');
       setCookie('accessToken', '');
-    } catch {
+    } catch (error) {
+      // При ошибке выхода всё равно очищаем состояние
+      dispatch(clearUser());
       return rejectWithValue('Ошибка выхода');
     }
   }
@@ -75,18 +79,14 @@ export const checkAuth = createAsyncThunk<
   TUserResponse,
   void,
   { rejectValue: string }
->('auth/checkAuth', async (_, { getState, rejectWithValue }) => {
-  const state = getState() as RootState;
-  if (!state.auth.isAuthenticated) {
-    return rejectWithValue('Пользователь не авторизован');
+>('auth/checkAuth', async (_, { rejectWithValue }) => {
+  const accessToken = getCookie('accessToken');
+  if (!accessToken) {
+    // Явно указываем, что пользователь не авторизован
+    return rejectWithValue('Токен отсутствует');
   }
 
   try {
-    const accessToken = getCookie('accessToken');
-    if (!accessToken) {
-      return rejectWithValue('Токен отсутствует');
-    }
-
     const response = await api.getUserApi();
     return response;
   } catch (err) {
@@ -97,7 +97,8 @@ export const checkAuth = createAsyncThunk<
         localStorage.setItem('refreshToken', refreshData.refreshToken);
         const response = await api.getUserApi();
         return response;
-      } catch {
+      } catch (refreshError) {
+        // При ошибке обновления токена явно сбрасываем авторизацию
         return rejectWithValue('Сессия истекла');
       }
     }
@@ -122,44 +123,66 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // login
+      .addCase(login.pending, (state) => {
+        state.authChecked = false;
+      })
       .addCase(login.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        state.authChecked = true;
       })
       .addCase(login.rejected, (state, action) => {
         state.error = action.payload ?? 'Ошибка входа';
+        state.authChecked = true;
       })
 
       // register
+      .addCase(register.pending, (state) => {
+        state.authChecked = false;
+      })
       .addCase(register.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        state.authChecked = true;
       })
       .addCase(register.rejected, (state, action) => {
         state.error = action.payload ?? 'Ошибка регистрации';
+        state.authChecked = true;
       })
 
       // logout
+      .addCase(logout.pending, (state) => {
+        state.authChecked = false;
+      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;
+        state.authChecked = true;
       })
       .addCase(logout.rejected, (state, action) => {
+        state.user = null;
+        state.isAuthenticated = false;
         state.error = action.payload ?? 'Ошибка выхода';
+        state.authChecked = true;
       })
 
       // checkAuth
+      .addCase(checkAuth.pending, (state) => {
+        state.authChecked = false;
+      })
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        state.authChecked = true;
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.error = action.payload ?? 'Ошибка проверки авторизации';
         state.isAuthenticated = false;
+        state.authChecked = true;
       });
   }
 });
@@ -169,9 +192,20 @@ export default authSlice.reducer;
 
 // Селекторы
 export const selectIsAuthenticated = (state: RootState): boolean =>
-  state.auth.isAuthenticated || !!getCookie('accessToken');
+  state.auth.isAuthenticated;
+
+export const selectAuthChecked = (state: RootState): boolean =>
+  state.auth.authChecked;
 
 export const selectUser = (state: RootState): TUser | null => state.auth.user;
 
 export const selectAuthError = (state: RootState): string | null =>
   state.auth.error;
+
+export const selectUserName = (state: RootState): string | undefined => {
+  // Если есть ошибка авторизации или пользователь не авторизован — возвращаем undefined
+  if (state.auth.error || !state.auth.isAuthenticated) {
+    return undefined;
+  }
+  return state.auth.user?.name?.trim();
+};

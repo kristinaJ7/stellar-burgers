@@ -1,3 +1,6 @@
+import { fetchIngredients } from '../../services/slices/ingredients-slice';
+import { checkAuth } from '../../services/slices/auth-slice';
+
 import { ConstructorPage } from '@pages';
 import { Feed } from '@pages';
 import { Login } from '@pages';
@@ -9,105 +12,215 @@ import { ProfileOrders } from '@pages';
 import { NotFound404 } from '@pages';
 
 import { Modal } from '@components';
-import { OrderInfo } from '@components';
 import { IngredientDetails } from '@components';
-
+import { OrderInfo } from '@components';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../../index.css';
 import styles from './app.module.css';
-
 import { AppHeader } from '@components';
 
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+import { useAppDispatch, useAppSelector } from '../../services/store';
 import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useNavigate,
-  useParams
-} from 'react-router-dom';
+  selectIsAuthenticated,
+  selectAuthChecked
+} from '../../services/slices/auth-slice';
 
-// Обёртка для OrderInfo
-const OrderInfoWrapper = () => {
-  const { number } = useParams<{ number: string }>();
-  const orderNumber = number ? parseInt(number, 10) : undefined;
+import { useEffect } from 'react';
 
-  console.log('OrderInfoWrapper: parsed orderNumber=', orderNumber);
+// Компонент защищённого маршрута
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authChecked = useAppSelector(selectAuthChecked);
+  const location = useLocation();
 
-  if (!orderNumber) {
-    return <div>Неверный номер заказа</div>;
+  if (!authChecked) {
+    return <div>Проверка авторизации...</div>;
   }
 
-  return <OrderInfo orderNumber={orderNumber} />;
+  if (!isAuthenticated) {
+    return <Navigate to='/login' state={{ from: location }} replace />;
+  }
+
+  return children;
 };
 
-const ModalWrapper = ({
-  children,
-  title
-}: {
-  children: React.ReactNode;
-  title: string;
-}) => {
+// Компонент публичного маршрута
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const authChecked = useAppSelector(selectAuthChecked);
+
+  if (!authChecked) {
+    return <div>Проверка авторизации...</div>;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to='/' replace />;
+  }
+
+  return children;
+};
+
+const UniversalModalWrapper = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const modalData = location.state as
+    | { title?: string; background?: Location }
+    | undefined;
 
   const handleClose = () => {
-    navigate(-1);
+    if (modalData?.background) {
+      navigate(-1);
+    } else {
+      navigate('..', { replace: true });
+    }
   };
 
   return (
-    <Modal title={title} onClose={handleClose}>
+    <Modal
+      title={modalData?.title || 'Детали'}
+      isOpen={!!modalData?.background}
+      onClose={handleClose}
+    >
       {children}
     </Modal>
   );
 };
 
-const App = () => (
-  <Router
-    future={{
-      v7_startTransition: true,
-      v7_relativeSplatPath: true
-    }}
-  >
+// Вспомогательные компоненты‑обёртки для корректного использования useParams
+const OrderInfoWrapper = () => {
+  const { number } = useParams();
+  if (!number) return <Navigate to='/feed' replace />;
+  return <OrderInfo orderNumber={parseInt(number)} />;
+};
+
+const ProfileOrderInfoWrapper = () => {
+  const { number } = useParams();
+  if (!number) return <Navigate to='/profile/orders' replace />;
+  return <OrderInfo orderNumber={parseInt(number)} />;
+};
+
+const App = () => {
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+
+  // Получаем background из состояния
+  const background = location.state?.background as Location | undefined;
+
+  useEffect(() => {
+    dispatch(fetchIngredients());
+    dispatch(checkAuth());
+  }, [dispatch]);
+
+  return (
     <div className={styles.app}>
       <AppHeader />
-      <Routes>
+
+      <Routes location={background || location}>
         <Route path='/' element={<ConstructorPage />} />
-
         <Route path='/feed' element={<Feed />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        <Route path='/forgot-password' element={<ForgotPassword />} />
-        <Route path='/reset-password' element={<ResetPassword />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path='/profile/orders' element={<ProfileOrders />} />
 
         <Route
-          path='/feed/:number'
+          path='/login'
           element={
-            <ModalWrapper title='Детали заказа'>
-              <OrderInfoWrapper />
-            </ModalWrapper>
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
           }
         />
         <Route
-          path='/ingredients/:id'
+          path='/register'
           element={
-            <ModalWrapper title='Ингредиенты'>
-              <IngredientDetails />
-            </ModalWrapper>
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
           }
         />
+        <Route
+          path='/forgot-password'
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/reset-password'
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path='/profile'
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/profile/orders'
+          element={
+            <ProtectedRoute>
+              <ProfileOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Исправленный маршрут: добавлен ProtectedRoute */}
         <Route
           path='/profile/orders/:number'
           element={
-            <ModalWrapper title='Детали заказа'>
-              <OrderInfoWrapper />
-            </ModalWrapper>
+            <ProtectedRoute>
+              <ProfileOrderInfoWrapper />
+            </ProtectedRoute>
           }
         />
 
+        <Route
+          path='/ingredients/:id'
+          element={<IngredientDetails isModal={false} />}
+        />
+        <Route path='/feed/:number' element={<OrderInfoWrapper />} />
+
         <Route path='*' element={<NotFound404 />} />
       </Routes>
+
+      {background && (
+        <Routes>
+          <Route
+            path='/ingredients/:id'
+            element={
+              <UniversalModalWrapper>
+                <IngredientDetails isModal />
+              </UniversalModalWrapper>
+            }
+          />
+          <Route
+            path='/feed/:number'
+            element={
+              <UniversalModalWrapper>
+                <OrderInfoWrapper />
+              </UniversalModalWrapper>
+            }
+          />
+          {/* В модальном слое защита не нужна — он наследует состояние от основного маршрута */}
+          <Route
+            path='/profile/orders/:number'
+            element={
+              <UniversalModalWrapper>
+                <ProfileOrderInfoWrapper />
+              </UniversalModalWrapper>
+            }
+          />
+        </Routes>
+      )}
     </div>
-  </Router>
-);
+  );
+};
 
 export default App;

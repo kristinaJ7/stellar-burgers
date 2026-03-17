@@ -11,6 +11,8 @@ export type TIngredient = {
   image: string;
   image_large: string;
   image_mobile: string;
+
+  id?: string;
 };
 
 export type TConstructorIngredient = TIngredient & {
@@ -82,5 +84,14 @@ export type TFeedsResponse = {
 
 export interface OrdersListProps {
   orders: TOrder[];
-  onOrderClick?: (orderNumber: number) => void;
+
+  //OrderClick?: (orderNumber: number) => void;
+
+  onOrderClick: (order: TOrder) => void;
+}
+
+export interface FeedInfoProps {
+  total: number;
+  totalToday: number;
+  orders: TOrder[]; // передаём все заказы, а не только номера
 }

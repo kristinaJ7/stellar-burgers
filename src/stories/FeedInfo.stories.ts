@@ -29,6 +29,7 @@ export const DefaultFeedInfo: Story = {
           ingredients: ['Булка', 'Начинка']
         }
       ],
+
       total: 12,
       totalToday: 2,
       isLoading: false,
