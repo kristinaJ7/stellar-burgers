@@ -1,4 +1,5 @@
 # Проектная работа 11-го спринта
+<img width="1486" height="913" alt="2026-03-17_11-32-07" src="https://github.com/user-attachments/assets/4b95487f-1528-4b67-b2f9-130c9a6ff42e" />
 
 [Макет](<https://www.figma.com/file/vIywAvqfkOIRWGOkfOnReY/React-Fullstack_-Проектные-задачи-(3-месяца)_external_link?type=design&node-id=0-1&mode=design>)
 
