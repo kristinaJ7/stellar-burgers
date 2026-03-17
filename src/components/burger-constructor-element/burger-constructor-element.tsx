@@ -1,3 +1,4 @@
+
 import { FC, memo, useCallback } from 'react';
 import { useAppDispatch } from '../../services/store';
 import { moveIngredient } from '../../services/slices/constructor-slice';
@@ -6,7 +7,7 @@ import { BurgerConstructorElementProps } from './type';
 
 export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
   ({ ingredient, index, totalItems, onRemoveIngredient }) => {
-    const dispatch = useAppDispatch(); // Добавляем объявление dispatch
+    const dispatch = useAppDispatch();
 
     if (!ingredient) return null;
 
@@ -22,9 +23,14 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
       }
     }, [dispatch, index]);
 
+    // Исправлено: проверка существования id перед вызовом
     const handleClose = useCallback(() => {
-      onRemoveIngredient(ingredient._id);
-    }, [onRemoveIngredient, ingredient._id]);
+      if (ingredient.id) {
+        onRemoveIngredient(ingredient.id);
+      } else {
+        console.warn('Попытка удалить ингредиент без id:', ingredient);
+      }
+    }, [onRemoveIngredient, ingredient.id]);
 
     return (
       <BurgerConstructorElementUI
@@ -40,3 +46,4 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
 );
 
 BurgerConstructorElement.displayName = 'BurgerConstructorElement';
+

@@ -171,15 +171,21 @@ const App = () => {
           }
         />
 
+        {/* Исправленный маршрут: добавлен ProtectedRoute */}
+        <Route
+          path='/profile/orders/:number'
+          element={
+            <ProtectedRoute>
+              <ProfileOrderInfoWrapper />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path='/ingredients/:id'
           element={<IngredientDetails isModal={false} />}
         />
         <Route path='/feed/:number' element={<OrderInfoWrapper />} />
-        <Route
-          path='/profile/orders/:number'
-          element={<ProfileOrderInfoWrapper />}
-        />
 
         <Route path='*' element={<NotFound404 />} />
       </Routes>
@@ -202,6 +208,7 @@ const App = () => {
               </UniversalModalWrapper>
             }
           />
+          {/* В модальном слое защита не нужна — он наследует состояние от основного маршрута */}
           <Route
             path='/profile/orders/:number'
             element={

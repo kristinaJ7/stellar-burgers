@@ -1,3 +1,5 @@
+
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { RootState } from '../root-reducer';
@@ -29,33 +31,36 @@ export const constructorSlice = createSlice({
           id: item.id || item._id,
           _id: item._id || item.id
         };
+        console.log('Добавляем ингредиент с id:', normalizedItem.id, 'и _id:', normalizedItem._id);
         state.ingredients.push(normalizedItem);
       }
     },
 
-    // Удаление ингредиента по _id (удаляет только один элемент)
+    // Удаление ингредиента по уникальному ID
     removeIngredient: (state, action: PayloadAction<string>) => {
       const ingredientId = action.payload;
+      const targetId = String(ingredientId);
 
-      console.log(
-        'constructorSlice: удаление ингредиента с _id:',
-        ingredientId
-      );
-      console.log('constructorSlice: до удаления:', state.ingredients);
+      console.log('=== УДАЛЕНИЕ ИНГРЕДИЕНТА ===');
+      console.log('ID для удаления (должен быть уникальным id):', targetId);
+      console.log('Ингредиенты до удаления:', state.ingredients);
 
-      // Находим индекс первого ингредиента с нужным _id
       const indexToRemove = state.ingredients.findIndex(
-        (item) => item._id === ingredientId
+        (item) => String(item.id) === targetId
       );
 
-      // Если ингредиент найден, удаляем его (только один)
+      console.log('Найденный индекс:', indexToRemove);
+
       if (indexToRemove !== -1) {
+        const removedItem = state.ingredients[indexToRemove];
+        console.log('Удаляем ингредиент:', removedItem);
         state.ingredients.splice(indexToRemove, 1);
+        console.log('Новый массив ингредиентов:', state.ingredients);
+      } else {
+        console.warn(`Ингредиент с id="${targetId}" не найден!`);
+        console.warn('Доступные ID:', state.ingredients.map(item => item.id));
       }
-
-      console.log('constructorSlice: после удаления:', state.ingredients);
     },
-
     // Очистка конструктора
     clearConstructor: (state) => {
       state.bun = null;
