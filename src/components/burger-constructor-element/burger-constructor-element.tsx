@@ -1,4 +1,3 @@
-
 import { FC, memo, useCallback } from 'react';
 import { useAppDispatch } from '../../services/store';
 import { moveIngredient } from '../../services/slices/constructor-slice';
@@ -46,4 +45,3 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
 );
 
 BurgerConstructorElement.displayName = 'BurgerConstructorElement';
-

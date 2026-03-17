@@ -1,5 +1,3 @@
-
-
 import { FC } from 'react';
 import { useAppSelector } from '../../services/store';
 import { selectUserName } from '../../services/slices/auth-slice';

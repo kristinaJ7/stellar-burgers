@@ -1,5 +1,3 @@
-
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from 'reselect';
 import { RootState } from '../root-reducer';
@@ -31,7 +29,12 @@ export const constructorSlice = createSlice({
           id: item.id || item._id,
           _id: item._id || item.id
         };
-        console.log('Добавляем ингредиент с id:', normalizedItem.id, 'и _id:', normalizedItem._id);
+        console.log(
+          'Добавляем ингредиент с id:',
+          normalizedItem.id,
+          'и _id:',
+          normalizedItem._id
+        );
         state.ingredients.push(normalizedItem);
       }
     },
@@ -58,7 +61,10 @@ export const constructorSlice = createSlice({
         console.log('Новый массив ингредиентов:', state.ingredients);
       } else {
         console.warn(`Ингредиент с id="${targetId}" не найден!`);
-        console.warn('Доступные ID:', state.ingredients.map(item => item.id));
+        console.warn(
+          'Доступные ID:',
+          state.ingredients.map((item) => item.id)
+        );
       }
     },
     // Очистка конструктора
