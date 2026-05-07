@@ -13,8 +13,6 @@ export const IngredientsCategory = forwardRef<
   // Берём актуальное состояние из Redux
   const burgerConstructor = useAppSelector(selectConstructorData);
 
-  if (!burgerConstructor) return null;
-
   const ingredientsCounters = useMemo(() => {
     const { bun, ingredients: constructorIngredients } = burgerConstructor;
     const counters: { [key: string]: number } = {};

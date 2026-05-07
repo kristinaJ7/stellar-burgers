@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -15,18 +15,34 @@
     "isolatedModules": true,
     "noEmit": false,
     "jsx": "react-jsx",
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "testing-library__jest-dom", "cypress"],
     "baseUrl": ".",
     "paths": {
       "@pages": ["src/pages"],
+      "@pages/*": ["src/pages/*"],
       "@components": ["src/components"],
+      "@components/*": ["src/components/*"],
       "@ui": ["src/components/ui"],
+      "@ui/*": ["src/components/ui/*"],
       "@ui-pages": ["src/components/ui/pages"],
+      "@ui-pages/*": ["src/components/ui/pages/*"],
       "@utils-types": ["src/utils/types"],
-      "@api": ["src/utils/burger-api.ts"],
+      "@utils-types/*": ["src/utils/types/*"],
+      "@api": ["src/utils"],
+      "@api/*": ["src/utils/*"],
       "@slices": ["src/services/slices"],
-      "@selectors": ["src/services/selectors"]
+      "@slices/*": ["src/services/slices/*"],
+      "@selectors": ["src/services/selectors"],
+      "@selectors/*": ["src/services/selectors/*"]
     }
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "cypress/support/**/*.d.ts"
+  ]
 }
+
+
+

@@ -14,7 +14,7 @@ const setCookie = (name: string, value: string) => {
   document.cookie = `${name}=${value}; path=/; max-age=3600`;
 };
 
-type AuthState = {
+export type AuthState = {
   user: TUser | null;
   isAuthenticated: boolean;
   error: string | null;
@@ -107,7 +107,7 @@ export const checkAuth = createAsyncThunk<
 });
 
 // Slice
-const authSlice = createSlice({
+export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {

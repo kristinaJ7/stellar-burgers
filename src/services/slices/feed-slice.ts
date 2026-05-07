@@ -1,8 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { getFeedsApi } from '@api';
+//import { getFeedsApi } from '@api';
+import { getFeedsApi } from '../../../src/utils/burger-api';
 import { TOrder, TFeedsResponse } from '@utils-types';
-
-type FeedState = {
+import { RootState } from '../root-reducer';
+export type FeedState = {
   orders: TOrder[];
   total: number;
   totalToday: number;
@@ -71,11 +72,17 @@ export const { setOrders, setTotal, setTotalToday, clearError } =
   feedSlice.actions;
 export default feedSlice.reducer;
 
-export const selectFeedOrders = (state: { feed: FeedState }) =>
-  state.feed.orders;
-export const selectFeedTotal = (state: { feed: FeedState }) => state.feed.total;
-export const selectFeedTotalToday = (state: { feed: FeedState }) =>
-  state.feed.totalToday;
-export const selectFeedLoading = (state: { feed: FeedState }) =>
-  state.feed.loading;
-export const selectFeedError = (state: { feed: FeedState }) => state.feed.error;
+export const selectFeedOrders = (state: RootState): TOrder[] =>
+  state.feed?.orders ?? [];
+
+export const selectFeedTotal = (state: RootState): number =>
+  state.feed?.total ?? 0;
+
+export const selectFeedTotalToday = (state: RootState): number =>
+  state.feed?.totalToday ?? 0;
+
+export const selectFeedLoading = (state: RootState): boolean =>
+  !!state.feed?.loading;
+
+export const selectFeedError = (state: RootState): string | null =>
+  state.feed?.error ?? null;

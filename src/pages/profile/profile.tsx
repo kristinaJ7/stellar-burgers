@@ -1,6 +1,10 @@
 import { ProfileUI } from '@ui-pages';
 import { FC, SyntheticEvent, useEffect, useState } from 'react';
-import { getUserApi, updateUserApi, refreshToken } from '@api';
+import {
+  getUserApi,
+  updateUserApi,
+  refreshToken
+} from '../../../src/utils/burger-api';
 import { TUserResponse } from '@utils-types';
 import { useNavigate } from 'react-router-dom';
 

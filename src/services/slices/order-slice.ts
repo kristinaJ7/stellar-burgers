@@ -28,7 +28,7 @@ const normalizeOrderResponse = (response: TNewOrderResponse): TOrder => ({
   updatedAt: response.order.updatedAt || new Date().toISOString()
 });
 
-type OrderState = {
+export type OrderState = {
   orderRequest: boolean;
   orderModalData: TOrder | null;
   orderNumber: number | null;
@@ -106,7 +106,7 @@ export const fetchUserOrders = createAsyncThunk<
 });
 
 // Slice
-const orderSlice = createSlice({
+export const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {

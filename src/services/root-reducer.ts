@@ -7,7 +7,7 @@ import orderReducer from './slices/order-slice';
 import { constructorReducer } from './slices/constructor-slice';
 import { combineSlices } from '@reduxjs/toolkit';
 
-const rootReducer = combineSlices({
+export const rootReducer = combineSlices({
   auth: authReducer,
   burgerConstructor: constructorReducer,
   feed: feedReducer,

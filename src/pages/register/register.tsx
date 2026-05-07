@@ -1,6 +1,7 @@
 import { FC, SyntheticEvent, useState } from 'react';
 import { RegisterUI } from '@ui-pages';
-import { registerUserApi } from '@api';
+
+import { registerUserApi } from '../../../src/utils/burger-api';
 import { TAuthResponse } from '@utils-types';
 export const Register: FC = () => {
   const [userName, setUserName] = useState('');

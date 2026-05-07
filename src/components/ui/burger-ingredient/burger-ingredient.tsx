@@ -15,7 +15,11 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
     const { image, price, name, _id } = ingredient;
 
     return (
-      <li className={styles.container}>
+      <li
+        className={styles.container}
+        data-testid='ingredient-item'
+        draggable='true'
+      >
         <Link
           className={styles.article}
           to={`/ingredients/${_id}`}
@@ -24,7 +28,8 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
             title: name // добавляем title для модального окна
           }}
         >
-          {count && <Counter count={count} />}
+          {count && <Counter data-testid='counter' count={count} />}
+
           <img
             className={styles.img}
             src={image}
@@ -38,6 +43,7 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
         </Link>
         <AddButton
           text='Добавить'
+          data-testid='add-ingredient-button'
           onClick={(e) => {
             e.stopPropagation(); // предотвращаем всплытие события к Link
             handleAdd();

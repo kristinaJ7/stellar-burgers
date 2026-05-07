@@ -51,13 +51,21 @@ export interface TNewOrderResponse {
   order: TOrder;
   name: string;
 }
+
+// Mock-данные
+const mockUser: TUser = {
+  email: 'test@example.com',
+  name: 'Test User'
+};
 // Ответ при авторизации/регистрации:
+
 export type TAuthResponse = {
   success: boolean;
-  refreshToken: string;
-  accessToken: string;
   user: TUser;
+  accessToken: string;
+  refreshToken: string;
 };
+
 //Данные, которые отправляет клиент на сервер:
 export type TLoginData = {
   email: string;

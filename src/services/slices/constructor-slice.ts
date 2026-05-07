@@ -4,12 +4,12 @@ import { RootState } from '../root-reducer';
 import { TIngredient, TConstructorIngredient } from '../../utils/types';
 
 // Состояние конструктора
-interface ConstructorState {
+export interface ConstructorState {
   bun: TIngredient | null;
   ingredients: TConstructorIngredient[];
 }
 
-const initialState: ConstructorState = {
+export const initialState: ConstructorState = {
   bun: null,
   ingredients: []
 };
@@ -44,15 +44,9 @@ export const constructorSlice = createSlice({
       const ingredientId = action.payload;
       const targetId = String(ingredientId);
 
-      console.log('=== УДАЛЕНИЕ ИНГРЕДИЕНТА ===');
-      console.log('ID для удаления (должен быть уникальным id):', targetId);
-      console.log('Ингредиенты до удаления:', state.ingredients);
-
       const indexToRemove = state.ingredients.findIndex(
         (item) => String(item.id) === targetId
       );
-
-      console.log('Найденный индекс:', indexToRemove);
 
       if (indexToRemove !== -1) {
         const removedItem = state.ingredients[indexToRemove];

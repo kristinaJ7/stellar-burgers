@@ -16,6 +16,7 @@ import { IngredientDetails } from '@components';
 import { OrderInfo } from '@components';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../../index.css';
+
 import styles from './app.module.css';
 import { AppHeader } from '@components';
 

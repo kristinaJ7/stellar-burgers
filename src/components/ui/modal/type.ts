@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 
 export type TModalUIProps = {
   title: string;
-  onClose: () => void;
   children?: ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
+  'data-testid'?: string;
 };
