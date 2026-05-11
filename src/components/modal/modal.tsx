@@ -54,17 +54,25 @@ export const Modal: FC<TModalProps> = memo(
       };
     }, [isOpen, onClose]); // Зависимости: isOpen и onClose
 
-    return ReactDOM.createPortal(
-      <ModalUI
-        title={title}
-        onClose={onClose}
-        isOpen={isOpen}
-        data-modal-container
-      >
-        {children}
-      </ModalUI>,
+ return ReactDOM.createPortal(
+  <div >
+    <ModalUI
+      title={title}
+      onClose={onClose}
+      isOpen={isOpen}
+      data-testid="modal"
+   
+    >
+      {children}
+    </ModalUI>
+  </div>,
+  modalRoot
+);
 
-      modalRoot
-    );
   }
 );
+
+
+
+
+

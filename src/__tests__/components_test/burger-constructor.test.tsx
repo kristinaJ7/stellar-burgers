@@ -1,14 +1,20 @@
+
+
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { BurgerConstructor } from '../../components/burger-constructor/burger-constructor';
 import { TIngredient } from '@utils-types';
 import { store } from '../../services/store';
 import { MemoryRouter } from 'react-router-dom';
-
-// Моки данных (без изменений)
+import { addItem, clearConstructor } from '../../services/slices/constructor-slice';
+import { setAuthenticated, clearUser } from '../../services/slices/auth-slice';
+import { createOrder } from '../../services/slices/order-slice';
+import { selectOrderRequest } from '../../services/slices/order-slice';
+import { TConstructorIngredient } from '@utils-types';
 const mockBun: TIngredient = {
   _id: '1',
+  id: '1',
   name: 'Флюоресцентная булка R2-D3',
   price: 988,
   type: 'bun',
@@ -23,6 +29,7 @@ const mockBun: TIngredient = {
 
 const mockIngredient: TIngredient = {
   _id: '2',
+  id: '2',
   name: 'Филе Люминесцентного тетраодонтимформа',
   price: 1068,
   type: 'main',
@@ -35,73 +42,73 @@ const mockIngredient: TIngredient = {
   image_mobile: 'https://example.com/ingredient-mobile.png'
 };
 
-// Вспомогательная функция для рендера
-const renderWithRouterAndStore = (ui: React.ReactElement, route = '/') =>
-  render(
-    <MemoryRouter initialEntries={[route]}>
-      <Provider store={store}>{ui}</Provider>
-    </MemoryRouter>
-  );
+const renderComponent = () => render(
+  <MemoryRouter>
+    <Provider store={store}>
+      <BurgerConstructor />
+    </Provider>
+  </MemoryRouter>
+);
 
-describe('BurgerConstructor Component - Order Button Logic', () => {
+const addIngredientsToConstructor = async () => {
+  store.dispatch(addItem(mockBun as TConstructorIngredient));
+  store.dispatch(addItem(mockIngredient as TConstructorIngredient));
+};
+
+
+const submitOrder = async () => {
+  store.dispatch(createOrder(['1', '2']));
+};
+
+describe('BurgerConstructor Component - Order Button Behavior', () => {
   beforeEach(() => {
-    store.dispatch({ type: 'RESET_CONSTRUCTOR' });
+    store.dispatch(clearConstructor());
+    store.dispatch(clearUser());
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('кнопка активна для неавторизованного пользователя без булок', async () => {
-    renderWithRouterAndStore(<BurgerConstructor />);
+  it('should have enabled order button by default', () => {
+    renderComponent();
     const orderButton = screen.getByTestId('order-button');
-
-    // Кнопка активна даже без булок для неавторизованного
     expect(orderButton).not.toBeDisabled();
   });
 
-  it('кнопка активна для авторизованного пользователя без булок', async () => {
-    // Устанавливаем авторизацию
-    await act(async () => {
-      store.dispatch({ type: 'SET_AUTH_CHECKED', payload: true });
-      store.dispatch({ type: 'SET_IS_AUTHENTICATED', payload: true });
-    });
-
-    renderWithRouterAndStore(<BurgerConstructor />);
+  it('should disable order button during order submission', async () => {
+    await addIngredientsToConstructor();
+    renderComponent();
 
     const orderButton = screen.getByTestId('order-button');
+    expect(orderButton).not.toBeDisabled();
 
-    // Для авторизованного пользователя кнопка активна даже без булок
-    await waitFor(
-      () => {
-        expect(orderButton).not.toBeDisabled();
-      },
-      { timeout: 3000 }
-    );
+    await submitOrder();
+
+    await waitFor(() => {
+      const state = store.getState();
+      expect(selectOrderRequest(state)).toBe(true);
+      expect(orderButton).toBeDisabled();
+    }, { timeout: 5000 });
   });
 
-  it('кнопка активна для авторизованного пользователя с булкой', async () => {
-    // Устанавливаем авторизацию
-    await act(async () => {
-      store.dispatch({ type: 'SET_AUTH_CHECKED', payload: true });
-      store.dispatch({ type: 'SET_IS_AUTHENTICATED', payload: true });
-    });
-
-    renderWithRouterAndStore(<BurgerConstructor />);
-
-    // Добавляем булку
-    await act(async () => {
-      store.dispatch({ type: 'ADD_BUN', payload: mockBun });
-    });
+  it('should re-enable order button after order completion', async () => {
+    await addIngredientsToConstructor();
+    renderComponent();
 
     const orderButton = screen.getByTestId('order-button');
 
-    // Для авторизованного с булкой кнопка активна
-    await waitFor(
-      () => {
-        expect(orderButton).not.toBeDisabled();
-      },
-      { timeout: 3000 }
-    );
+    await submitOrder();
+
+    await waitFor(() => expect(orderButton).toBeDisabled());
+
+    await waitFor(() => {
+      const state = store.getState();
+      expect(selectOrderRequest(state)).toBe(false);
+      expect(orderButton).not.toBeDisabled();
+    }, { timeout: 3000 });
+  });
+
+  it('should keep button enabled for authorized user without buns', async () => {
+    store.dispatch(setAuthenticated(true));
+    renderComponent();
+    const orderButton = screen.getByTestId('order-button');
+    expect(orderButton).not.toBeDisabled();
   });
 });

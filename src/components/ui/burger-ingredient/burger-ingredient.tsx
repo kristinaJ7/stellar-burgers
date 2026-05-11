@@ -42,13 +42,15 @@ export const BurgerIngredientUI: FC<TBurgerIngredientUIProps> = memo(
           <p className={`text text_type_main-default ${styles.text}`}>{name}</p>
         </Link>
         <AddButton
+          data-testid="add-ingredient-button"
           text='Добавить'
-          data-testid='add-ingredient-button'
           onClick={(e) => {
             e.stopPropagation(); // предотвращаем всплытие события к Link
             handleAdd();
           }}
           extraClass={`${styles.addButton} mt-8`}
+         
+          
         />
       </li>
     );

@@ -236,6 +236,7 @@ export const BurgerConstructor: FC = () => {
       closeOrderModal={closeOrderModal}
       showOrderModal={showOrderModal}
       onRemoveIngredient={handleRemoveIngredient} // Теперь переменная существует
+       
     />
   );
 };

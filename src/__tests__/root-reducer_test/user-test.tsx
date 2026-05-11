@@ -1,6 +1,10 @@
+//import { register } from 'module';
 import { login, checkAuth } from '../../../src/services/slices/auth-slice';
 import { authSlice } from '../../../src/services/slices/auth-slice';
+import { logout } from '../../../src/services/slices/auth-slice';
 
+
+import { register } from '../../../src/services/slices/auth-slice';
 import type {
   TUser,
   TAuthResponse,
@@ -146,15 +150,83 @@ describe('authSlice', () => {
       });
     });
   });
-
-  describe('register', () => {
-    // Аналогично login
+describe('register', () => {
+  describe('pending', () => {
+    it('устанавливает authChecked в false', () => {
+      const action = { type: register.pending.type };
+      const result = authSlice.reducer(initialState, action);
+      expect(result.authChecked).toBe(false);
+    });
   });
 
-  describe('logout', () => {
-    // Аналогично предыдущим блокам
+  describe('fulfilled', () => {
+    it('сохраняет данные пользователя и устанавливает флаги аутентификации', () => {
+      const action = {
+        type: register.fulfilled.type,
+        payload: mockAuthResponse
+      };
+      const result = authSlice.reducer(initialState, action);
+
+      expect(result.user).toEqual(mockUser);
+      expect(result.isAuthenticated).toBe(true);
+      expect(result.error).toBeNull();
+      expect(result.authChecked).toBe(true);
+    });
   });
 
+  describe('rejected', () => {
+    it('сохраняет ошибку и сбрасывает флаги аутентификации', () => {
+      const mockError = 'Ошибка регистрации';
+      const action = {
+        type: register.rejected.type,
+        payload: mockError
+      };
+      const result = authSlice.reducer(initialState, action);
+
+      expect(result.error).toBe(mockError);
+      expect(result.isAuthenticated).toBe(false);
+      expect(result.authChecked).toBe(true);
+    });
+  });
+});
+
+describe('logout', () => {
+  describe('pending', () => {
+    it('устанавливает authChecked в false', () => {
+      const action = { type: logout.pending.type };
+      const result = authSlice.reducer(initialState, action);
+      expect(result.authChecked).toBe(false);
+    });
+  });
+
+  describe('fulfilled', () => {
+    it('очищает данные пользователя и сбрасывает флаги аутентификации', () => {
+      const action = {
+        type: logout.fulfilled.type
+      };
+      const result = authSlice.reducer(initialState, action);
+
+      expect(result.user).toBeNull();
+      expect(result.isAuthenticated).toBe(false);
+      expect(result.error).toBeNull();
+      expect(result.authChecked).toBe(true);
+    });
+  });
+
+  describe('rejected', () => {
+    it('сохраняет ошибку, authChecked остаётся true', () => {
+      const mockError = 'Ошибка выхода из системы';
+      const action = {
+        type: logout.rejected.type,
+        payload: mockError
+      };
+      const result = authSlice.reducer(initialState, action);
+
+      expect(result.error).toBe(mockError);
+      expect(result.authChecked).toBe(true);
+    });
+  });
+});
   describe('checkAuth', () => {
     describe('pending', () => {
       it('sets authChecked to false', () => {
