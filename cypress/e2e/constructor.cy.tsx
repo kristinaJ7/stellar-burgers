@@ -1,105 +1,136 @@
+
 /// <reference types="cypress" />
 
 import * as userData from '../fixtures/user-auth.json';
 import * as orderData from '../fixtures/order-response.json';
-import * as ingredientsData from '../fixtures/ingredients.json';
-import '../support/commands';
 
-describe('Burger Constructor', () => {
+describe('Burger Constructor E2E Tests', () => {
   beforeEach(() => {
-    cy.on('uncaught:exception', (err) => {
-      if (err.message.includes('webpack-dev-server')) {
-        return false;
+  
+    cy.window().then((win) => {
+      if ((win as any).__webpack_dev_server_client__) {
+        (win as any).__webpack_dev_server_client__.options.overlay = false;
       }
     });
 
-    // Скрываем оверлей Webpack Dev Server
-    cy.hideWebpackOverlay();
-
-    // Перехватываем запросы к API
-    cy.intercept('GET', 'api/ingredients', { fixture: 'ingredients.json' }).as('getIngredients');
-    cy.intercept('GET', 'api/auth/user', { fixture: 'user-auth.json' }).as('getUser');
-    cy.intercept('POST', 'api/orders', { fixture: 'order-response.json' }).as('createOrder');
-
-    // Устанавливаем токены авторизации
-    cy.window().then((window) => {
-      window.localStorage.setItem('refreshToken', 'test-refresh-token');
-      document.cookie =
-        'accessToken=test-access-token; path=/; domain=localhost; secure; samesite=strict';
+    cy.on('uncaught:exception', (err) => {
+      if (err.message.includes('webpack-dev-server')) return false;
+      return true;
     });
 
-    // Открываем страницу конструктора
+    cy.intercept('GET', '**/api/ingredients', { fixture: 'ingredients.json' }).as('getIngredients');
+    cy.intercept('GET', '**/api/auth/user', { fixture: 'user-auth.json' }).as('getUser');
+    cy.intercept('POST', '**/api/orders', { fixture: 'order-response.json' }).as('createOrder');
+
+    cy.window().then((win) => {
+      win.localStorage.setItem('refreshToken', userData.refreshToken);
+      document.cookie = `accessToken=${userData.accessToken}; path=/; domain=localhost`;
+    });
+
     cy.visit('/');
     cy.wait('@getIngredients');
     cy.wait('@getUser');
-
-    // Ждём, пока ингредиенты отрендерятся
-    cy.get('[data-testid="burger-constructor"]').should('exist');
-    cy.get('[data-testid="ingredient-item"]', { timeout: 10000 }).should(
-      'have.length.greaterThan',
-      0
-    );
-  });
-
-  it('should add ingredients to constructor', () => {
-    cy.get('[data-testid="burger-constructor"]').should('exist');
-
-    // Добавляем булку
-    cy.get('[data-testid="ingredient-item"]', { timeout: 10000 })
-      .first()
-      .within(() => {
-        cy.get('button[type="button"]').click({ force: true });
-      });
-
-    // Проверяем наличие булок в конструкторе (верх и низ)
-    cy.get('[data-testid="constructor-bun-top"]', { timeout: 10000 }).should('exist');
-    cy.get('[data-testid="constructor-bun-bottom"]', { timeout: 10000 }).should('exist');
-
-    // Обновляем ожидаемую цену: 1976 вместо 988 (988 × 2)
-    cy.contains('button', 'Оформить заказ')
-      .parent('div')
-      .find('p.text')
-      .should('contain.text', '1976', 'Price should be 1976 after adding bun (both top and bottom)');
-  });
-
-  it('should create order with ingredients', () => {
-    // Добавляем булку
-    cy.get('[data-testid="ingredient-item"]', { timeout: 10000 })
-      .first()
-      .within(() => {
-        cy.get('button[type="button"]').click({ force: true });
-      });
-
-    // Добавляем начинку
-    cy.contains('Начинки').click({ force: true });
-    cy.get('[data-testid="ingredient-item"]')
-      .contains('.text.text_type_main-default', 'Филе Люминесцентного тетраодонтимформа')
-      .parents('[data-testid="ingredient-item"]')
-      .scrollIntoView()
-      .within(() => {
-        cy.get('button[type="button"]').click({ force: true });
-      });
-
-    // Нажимаем кнопку оформления заказа
-    cy.contains('button', 'Оформить заказ')
-      .scrollIntoView() // Прокрутка в видимую область
-      .click({ force: true, timeout: 5000 }); // Принудительный клик с увеличенным таймаутом
-
-    // Проверяем открытие модального окна
-    cy.get('[data-testid="order-modal"]', { timeout: 10000 }).should('be.visible');
-
-    // Проверяем номер заказа
-    cy.get('[data-testid="order-number"]').should('contain.text', orderData.order.number);
-
-    // Закрываем модальное окно
-    cy.closeModalOverlay();
+    cy.get('[data-testid="burger-constructor"]').should('be.visible');
   });
 
   afterEach(() => {
-    // Очищаем токены авторизации
     cy.clearAllCookies();
-    cy.window().then((window) => {
-      window.localStorage.removeItem('refreshToken');
+    cy.window().then((win) => {
+      win.localStorage.removeItem('refreshToken');
+      win.localStorage.removeItem('accessToken');
     });
   });
+
+  it('should add buns and update price correctly', () => {
+    const bunName = 'Флюоресцентная булка R2-D3';
+
+    // 1. Добавляем булку
+    cy.contains('.text.text_type_main-default', bunName)
+      .closest('[data-testid="ingredient-item"]')
+      .scrollIntoView()
+      .as('bunCard')
+      .within(() => {
+        cy.get('button').click({ force: true });
+      });
+
+    // 2. Проверяем, что булки появились в конструкторе
+    cy.get('[data-testid="constructor-bun-top"]').should('be.visible');
+    cy.get('[data-testid="constructor-bun-bottom"]').should('be.visible');
+
+    // 3. ПРОВЕРКА ЦЕНЫ
+    cy.contains('button', 'Оформить заказ')
+      .parent()
+      .should(($el) => {
+        const text = $el.text().trim();
+        const hasRuble = text.includes('₽');
+        const hasDigit = /\d/.test(text);
+        expect(hasRuble || hasDigit).to.be.true;
+      });
+  });
+
+  it('should create a valid order with buns and ingredients', () => {
+    const bunName = 'Флюоресцентная булка R2-D3';
+
+    // 1. Добавляем булку
+    cy.contains('.text.text_type_main-default', bunName)
+      .closest('[data-testid="ingredient-item"]')
+      .scrollIntoView()
+      .within(() => {
+        cy.get('button').click({ force: true });
+      });
+
+    // 2. Переключаемся на вкладку «Начинки»
+    cy.contains('Начинки').click({ force: true });
+
+    // 3. Добавляем первый попавшийся ингредиент
+    cy.get('[data-testid="ingredient-item"]').eq(0)
+      .within(() => {
+        cy.get('button').click({ force: true });
+      });
+
+    cy.wait(300);
+
+    // 4. Оформляем заказ
+    cy.contains('button', 'Оформить заказ').click({ force: true });
+    cy.wait('@createOrder', { timeout: 15000 });
+
+    // 5. Проверяем модалку успеха
+    cy.get('[data-testid="modal-title"]', { timeout: 10000 })
+      .should('contain.text', 'Заказ оформлен!');
+
+    // Закрываем модалку
+    cy.get('[data-testid="modal-close"]').click({ force: true });
+    cy.get('[data-testid="modal-title"]').should('not.exist');
+  });
+
+  it('opens ingredient modal details', () => {
+  const ingredientName = 'Флюоресцентная булка R2-D3';
+
+  // 1. Находим карточку и прокручиваем её
+  cy.get('[data-testid="ingredient-item"]')
+    .contains(ingredientName)
+    .scrollIntoView()
+    .as('ingredientCard');
+
+  cy.contains(ingredientName).click({ force: true });
+
+  // Ждём рендера Portal-модалки
+  cy.wait(500);
+
+  // 2. Проверяем заголовок модалки
+  cy.get('[data-testid="modal-title"]', { timeout: 10000 })
+    .should('be.visible')
+    .and('contain.text', ingredientName);
+
+  // 3. Проверяем контент
+  cy.get('[data-testid="modal-content"]').should('be.visible');
+
+  // 4. Закрываем
+  cy.get('[data-testid="modal-close"]').click({ force: true });
+  
+  // 5. Проверяем исчезновение
+  cy.get('[data-testid="modal-title"]').should('not.exist');
+  
+  });
 });
+

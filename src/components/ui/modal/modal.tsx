@@ -6,10 +6,10 @@ import { ModalOverlayUI } from '@ui';
 
 export const ModalUI: FC<TModalUIProps> = memo(
   ({ title, onClose, children, 'data-testid': testId }) => (
-    <div className={styles.modalContainer}  data-testid={testId} data-modal-container >
-      <ModalOverlayUI onClick={onClose} />
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
+    <div className={styles.modalContainer}   data-testid={testId}   data-modal-container >
+      <ModalOverlayUI onClick={onClose}  data-testid='modal'/>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}  data-testid='modal'>
+        <div className={styles.header} >
           <h3
             className={`${styles.title} text text_type_main-large`}
             data-testid='modal-title'

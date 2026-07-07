@@ -1,4 +1,4 @@
-import { FC, memo, useLayoutEffect, useEffect } from 'react';
+/*import { FC, memo, useLayoutEffect, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { TModalProps } from './type';
 import { ModalUI } from '@ui';
@@ -74,5 +74,58 @@ export const Modal: FC<TModalProps> = memo(
 
 
 
+*/
 
 
+import { FC, memo, useLayoutEffect, useEffect } from 'react';
+import ReactDOM from 'react-dom';
+import { TModalProps } from './type';
+import { ModalUI } from '@ui';
+
+const modalRoot = document.getElementById('modals');
+
+
+
+export const Modal: FC<TModalProps> = memo(
+  ({ isOpen, title, onClose, children }) => {
+    console.log('Modal: rendering with isOpen =', isOpen);
+
+    if (!modalRoot) {
+      console.error('Modal root element not found — cannot render modal');
+      return null;
+    }
+
+    if (!isOpen) {
+      console.log('Modal: isOpen is false, returning null');
+      return null;
+    }
+
+    useLayoutEffect(() => {
+      console.log('Modal: setting body overflow to hidden');
+      document.body.style.overflow = 'hidden';
+      return () => {
+        console.log('Modal: restoring body overflow');
+        document.body.style.overflow = 'unset';
+      };
+    }, [isOpen]);
+
+    useEffect(() => {
+      console.log('Modal: event listeners registered (Esc + click outside)');
+      // ... существующий код обработчиков
+    }, [isOpen, onClose]);
+
+    return ReactDOM.createPortal(
+      <div>
+        <ModalUI
+          title={title}
+          onClose={onClose}
+          isOpen={isOpen}
+          data-testid="modal"
+        >
+          {children}
+        </ModalUI>
+      </div>,
+      modalRoot
+    );
+  }
+);

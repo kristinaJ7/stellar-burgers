@@ -16,7 +16,7 @@ const TOKEN_REFRESH_RETRIES = 2;
 
 export const Profile: FC = () => {
   const [formValue, setFormValue] = useState({
-    name: '',
+    name: '',   
     email: '',
     password: ''
   });

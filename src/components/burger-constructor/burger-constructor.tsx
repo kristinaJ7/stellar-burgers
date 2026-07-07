@@ -17,7 +17,6 @@ import {
   selectAuthChecked
 } from '../../services/slices/auth-slice';
 import { removeIngredient } from '../../services/slices/constructor-slice';
-
 interface ApiError {
   status?: number;
   message?: string;
@@ -240,3 +239,5 @@ export const BurgerConstructor: FC = () => {
     />
   );
 };
+
+selectConstructorIngredients

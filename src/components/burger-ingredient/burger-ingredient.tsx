@@ -68,6 +68,7 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
         count={count}
         locationState={locationState}
         handleAdd={handleAdd}
+       
       />
     );
   }

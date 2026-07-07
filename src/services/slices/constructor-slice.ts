@@ -98,7 +98,7 @@ export const { addItem, removeIngredient, clearConstructor, moveIngredient } =
   constructorSlice.actions;
 
 // Селекторы
-export const selectConstructorBun = (state: RootState) =>
+export const selectConstructorBun = (state: RootState) => 
   state.burgerConstructor?.bun || null;
 
 export const selectConstructorIngredients = (state: RootState) =>
@@ -124,3 +124,7 @@ export const constructorSelectors = {
 
 export const constructorReducer = constructorSlice.reducer;
 export default constructorSlice.reducer;
+
+
+ clearConstructor 
+

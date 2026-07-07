@@ -100,15 +100,34 @@ module.exports = {
     path: path.resolve(__dirname, './dist'),
     filename: 'bundle.js'
   },
-  devServer: {
+  
+
+ devServer: {
+    static: path.join(__dirname, './dist'),
+    compress: true,
+    historyApiFallback: true,
+    port: 4000,
+    client: {
+       overlay: false, // <--- ВОТ ЭТА СТРОКА ОТКЛЮЧАЕТ ОВЕРЛЕЙ
+    }
+  }
+};
+
+
+
+
+
+
+/**devServer: {
     static: path.join(__dirname, './dist'),
     compress: true,
 
     historyApiFallback: true,
 
     port: 4000
+
+
+
+
   }
-};
- 
-
-
+}; */
