@@ -1,7 +1,10 @@
+
+
 {
   "name": "react-canonical",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://kristinaj7.github.io/stellar-burgers/",
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
     "@types/react": "^18.0.31",
@@ -50,7 +53,6 @@
     "@types/react-dom": "^18.2.18",
     "@types/react-test-renderer": "^18.0.7",
     "@types/testing-library__jest-dom": "^5.14.9",
-    "@types/webpack-env": "^1.18.4",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "babel-jest": "^29.7.0",
@@ -91,6 +93,7 @@
   },
   "scripts": {
     "start": "webpack serve --mode=development",
+    "build": "webpack --mode production",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./src",
