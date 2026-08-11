@@ -96,10 +96,22 @@ module.exports = {
       '@selectors': path.resolve(__dirname, './src/services/selectors')
     }
   },
-  output: {
+ 
+ 
+ 
+ /* output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'bundle.js'
-  },
+  },*/
+
+  output: {
+  path: path.resolve(__dirname, './dist'),
+  filename: 'static/js/[name].[contenthash:8].js',      // лучше так, чем просто bundle.js — будет чанкинг и кэш
+  chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+  publicPath: '/stellar-burgers/',                    // <--- ЭТО КРИТИЧНО для GitHub Pages
+  clean: true                                          // очищает папку dist перед сборкой
+},
+
   
 
  devServer: {

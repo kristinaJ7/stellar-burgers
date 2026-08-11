@@ -1,0 +1,31 @@
+[1mdiff --git a/package.json b/package.json[m
+[1mindex 2be9bfc..f0bfae3 100644[m
+[1m--- a/package.json[m
+[1m+++ b/package.json[m
+[36m@@ -1,7 +1,10 @@[m
+[32m+[m
+[32m+[m
+ {[m
+   "name": "react-canonical",[m
+   "version": "0.1.0",[m
+   "private": true,[m
+[32m+[m[32m  "homepage": "https://kristinaj7.github.io/stellar-burgers/",[m
+   "dependencies": {[m
+     "@reduxjs/toolkit": "^2.11.2",[m
+     "@types/react": "^18.0.31",[m
+[36m@@ -50,7 +53,6 @@[m
+     "@types/react-dom": "^18.2.18",[m
+     "@types/react-test-renderer": "^18.0.7",[m
+     "@types/testing-library__jest-dom": "^5.14.9",[m
+[31m-    "@types/webpack-env": "^1.18.4",[m
+     "@typescript-eslint/eslint-plugin": "^6.15.0",[m
+     "@typescript-eslint/parser": "^6.15.0",[m
+     "babel-jest": "^29.7.0",[m
+[36m@@ -91,6 +93,7 @@[m
+   },[m
+   "scripts": {[m
+     "start": "webpack serve --mode=development",[m
+[32m+[m[32m    "build": "webpack --mode production",[m
+     "storybook": "storybook dev -p 6006",[m
+     "build-storybook": "storybook build",[m
+     "lint": "eslint --ext .js,.jsx,.ts,.tsx ./src",[m

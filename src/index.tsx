@@ -39,9 +39,16 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+      {/*<BrowserRouter future={{ v7_relativeSplatPath: true }}>
         <App />
-      </BrowserRouter>
+      </BrowserRouter>*/}
+
+<BrowserRouter basename="/stellar-burgers" future={{ v7_relativeSplatPath: true }}>
+  <App />
+</BrowserRouter>
+
+
+
     </Provider>
   </React.StrictMode>
 );
