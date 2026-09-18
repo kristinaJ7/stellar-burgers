@@ -2,6 +2,13 @@
 <img width="1485" height="902" alt="2026-03-17_11-33-03" src="https://github.com/user-attachments/assets/dc350589-c554-4a30-b020-0f8953c17d78" />
 
 
+
+- **Source Code:** GitHub Repository - 'https://github.com/kristinaJ7/stellar-burgers.git',
+- **Live Demo:** 'https://kristinaj7.github.io/stellar-burgers/',
+
+
+
+
 [Макет](<https://www.figma.com/file/vIywAvqfkOIRWGOkfOnReY/React-Fullstack_-Проектные-задачи-(3-месяца)_external_link?type=design&node-id=0-1&mode=design>)
 
 [Чеклист](https://www.notion.so/praktikum/0527c10b723d4873aa75686bad54b32e?pvs=4)
